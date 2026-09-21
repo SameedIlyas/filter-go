@@ -1,0 +1,931 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =============================================================================
+// Enums
+// =============================================================================
+
+enum Role {
+  ADMIN
+  SUPERVISOR
+  FIELD_USER
+  CLIENT_USER
+}
+
+enum UserStatus {
+  /// Invited by an admin, has not chosen a password yet. Cannot log in.
+  INVITED
+  ACTIVE
+  /// "inactive" in the design doc. Blocked by an admin: sessions revoked, login refused.
+  DISABLED
+}
+
+enum EmploymentType {
+  EMPLOYEE
+  CONTRACTOR
+}
+
+enum TokenPurpose {
+  INVITE
+  PASSWORD_RESET
+}
+
+enum PaymentTerms {
+  NET15
+  NET30
+  DUE_ON_RECEIPT
+}
+
+enum ContractStatus {
+  DRAFT
+  PENDING_SIGNATURE
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  CANCELLED
+}
+
+enum BillingType {
+  PER_VISIT
+  HOURLY
+  MONTHLY_FIXED
+}
+
+enum BillingCycle {
+  PER_VISIT
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum CoveragePattern {
+  WEEKLY
+  INTERVAL
+  AD_HOC
+}
+
+enum ScheduleStatus {
+  DRAFT
+  PUBLISHED
+  LOCKED
+  CLOSED
+}
+
+enum ShiftStatus {
+  OPEN
+  ASSIGNED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
+
+enum OfferStatus {
+  OFFERED
+  ACCEPTED
+  DECLINED
+  /// The shift was filled another way, so the offer is closed.
+  WITHDRAWN
+}
+
+enum TimesheetStatus {
+  OPEN
+  SUBMITTED
+  APPROVED
+  REJECTED
+  ADJUSTED
+  CORRECTED
+  INVOICED
+}
+
+enum ExceptionType {
+  LATE_IN
+  EARLY_OUT
+  OVERTIME
+  GEOFENCE_MISS
+  MISSING_CLOCK_OUT
+  NO_SHOW
+}
+
+enum WorkLogKind {
+  PHOTO
+  NOTE
+  ISSUE
+  CHECKLIST
+}
+
+enum InvoiceStatus {
+  DRAFT
+  APPROVED
+  SYNCED
+  SENT
+  PARTIALLY_PAID
+  PAID
+  VOID
+}
+
+enum InvoiceLineSource {
+  TIMESHEET
+  SHIFT
+  CONTRACT_LINE
+  MANUAL
+}
+
+enum LeadSource {
+  WEBSITE
+  PHONE
+  REFERRAL
+  FIELD
+  MANUAL
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  WON
+  LOST
+}
+
+enum LeadActivityType {
+  CALL
+  EMAIL
+  SITE_VISIT
+  NOTE
+}
+
+enum JobStatus {
+  PENDING
+  DONE
+  /// Retries exhausted. Needs a human.
+  DEAD
+}
+
+// =============================================================================
+// Organization + Users + Auth
+// =============================================================================
+
+model Organization {
+  id                 String   @id @default(uuid())
+  name               String
+  /// IANA zone (e.g. "America/Chicago"). Default for sites that don't set their own.
+  timezone           String   @default("UTC")
+  /// Public, non-secret key that website forms send so we know which org a lead belongs to.
+  leadIntakeKey      String   @unique
+  /// Who is notified of (and owns) new website leads. Null = first active admin.
+  defaultLeadOwnerId String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  users     User[]
+  clients   Client[]
+  sites     Site[]
+  services  Service[]
+  taxRates  TaxRate[]
+  contracts Contract[]
+
+  @@map("organizations")
+}
+
+model User {
+  id                String         @id @default(uuid())
+  orgId             String
+  /// Always stored trimmed + lowercase. Globally unique: one email, one organization.
+  email             String         @unique
+  name              String
+  image             String?
+  phone             String?
+  role              Role           @default(FIELD_USER)
+  status            UserStatus     @default(INVITED)
+  employmentType    EmploymentType @default(EMPLOYEE)
+  /// Fallback pay rate when the contract line has none. Visible to ADMIN and SUPERVISOR only.
+  defaultPayRate    Decimal?       @db.Decimal(12, 2)
+  hiredAt           DateTime?      @db.Date
+  /// Set for CLIENT_USER only: the client whose sites/invoices they may read.
+  clientId          String?
+  /// argon2id hash. Null until the invite is accepted.
+  passwordHash      String?
+  passwordChangedAt DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  org    Organization @relation(fields: [orgId], references: [id])
+  client Client?      @relation(fields: [clientId], references: [id])
+
+  sessions      Session[]
+  tokens        OneTimeToken[]
+  availability  UserAvailability[]
+  siteAccess    UserSiteAccess[]
+  documents     UserDocument[]
+  notifications Notification[]
+
+  @@index([orgId, role, status])
+  @@map("users")
+}
+
+/// Weekly recurring availability window. weekday: 1 = Monday ... 7 = Sunday. Times are "HH:mm" local to the org timezone.
+model UserAvailability {
+  id        String @id @default(uuid())
+  userId    String
+  weekday   Int
+  startTime String
+  endTime   String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_availability")
+}
+
+/// Field users: where they may be scheduled. Supervisors: which sites they manage.
+model UserSiteAccess {
+  id     String @id @default(uuid())
+  userId String
+  siteId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, siteId])
+  @@index([siteId])
+  @@map("user_site_access")
+}
+
+model UserDocument {
+  id        String    @id @default(uuid())
+  orgId     String
+  userId    String
+  /// Free text so admins can add types: "license", "insurance", "training", ...
+  type      String
+  fileId    String?
+  expiresAt DateTime? @db.Date
+  notes     String?
+  createdAt DateTime  @default(now())
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  file FileObject? @relation(fields: [fileId], references: [id])
+
+  @@index([userId, type])
+  @@index([orgId, expiresAt])
+  @@map("user_documents")
+}
+
+/// Server-side session. The raw token is only ever held by the client, we store its SHA-256.
+model Session {
+  id                String    @id @default(uuid())
+  userId            String
+  tokenHash         String    @unique
+  remember          Boolean   @default(false)
+  userAgent         String?
+  ip                String?
+  createdAt         DateTime  @default(now())
+  lastUsedAt        DateTime  @default(now())
+  /// Sliding limit, pushed forward while the user is active.
+  idleExpiresAt     DateTime
+  /// Hard limit, never extended.
+  absoluteExpiresAt DateTime
+  revokedAt         DateTime?
+  revokedReason     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@map("sessions")
+}
+
+/// Single-use link tokens (invite + password reset). Only the SHA-256 is stored.
+model OneTimeToken {
+  id        String       @id @default(uuid())
+  userId    String
+  purpose   TokenPurpose
+  tokenHash String       @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, createdAt])
+  @@map("one_time_tokens")
+}
+
+/// Failed login attempts, used for throttling. Keyed by hash so unknown emails are tracked too.
+model LoginAttempt {
+  id        String   @id @default(uuid())
+  emailKey  String
+  ip        String
+  createdAt DateTime @default(now())
+
+  @@index([emailKey, ip, createdAt])
+  @@index([emailKey, createdAt])
+  @@index([ip, createdAt])
+  @@map("login_attempts")
+}
+
+// =============================================================================
+// Shared: audit, files, notifications, sequences, jobs
+// =============================================================================
+
+/// Append-only trail. Auth events use `type` + `userId`; domain events also fill entity/entityId/action/diff.
+/// Never store passwords or tokens in `metadata` or `diff`.
+model AuditEvent {
+  id        String   @id @default(uuid())
+  orgId     String?
+  userId    String?
+  actorId   String?
+  type      String
+  entity    String?
+  entityId  String?
+  action    String?
+  diff      Json?
+  ip        String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
+  @@index([orgId, entity, entityId, createdAt])
+  @@map("audit_events")
+}
+
+/// Uploaded file metadata. Bytes live in the storage driver under `key`.
+model FileObject {
+  id           String   @id @default(uuid())
+  orgId        String
+  key          String   @unique
+  originalName String
+  contentType  String
+  size         Int
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  userDocuments UserDocument[]
+
+  @@index([orgId])
+  @@map("files")
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  orgId     String
+  userId    String
+  type      String
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
+}
+
+/// Gap-free-ish counters for human-readable numbers (invoice numbers, contract numbers).
+model Sequence {
+  orgId String
+  key   String
+  value Int    @default(0)
+
+  @@id([orgId, key])
+  @@map("sequences")
+}
+
+/// Durable outbound work with retries (accounting sync, payment provider calls, ...).
+model OutboxJob {
+  id          String    @id @default(uuid())
+  orgId       String?
+  type        String
+  payload     Json
+  status      JobStatus @default(PENDING)
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(8)
+  runAt       DateTime  @default(now())
+  lockedUntil DateTime?
+  lastError   String?
+  /// Prevents enqueuing the same logical job twice.
+  dedupeKey   String?   @unique
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@index([status, runAt])
+  @@map("outbox_jobs")
+}
+
+/// Lease so only one server instance runs each scheduled job at a time.
+model JobLease {
+  name        String    @id
+  lockedUntil DateTime
+  lastRunAt   DateTime?
+  lastError   String?
+
+  @@map("job_leases")
+}
+
+/// Webhook idempotency: each provider event is processed once.
+model WebhookEvent {
+  id         String   @id @default(uuid())
+  provider   String
+  eventId    String
+  receivedAt DateTime @default(now())
+
+  @@unique([provider, eventId])
+  @@map("webhook_events")
+}
+
+// =============================================================================
+// Contracts module
+// =============================================================================
+
+model Service {
+  id          String   @id @default(uuid())
+  orgId       String
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id])
+
+  contractLines ContractLine[]
+
+  @@unique([orgId, name])
+  @@map("services")
+}
+
+model TaxRate {
+  id          String  @id @default(uuid())
+  orgId       String
+  code        String
+  ratePercent Decimal @db.Decimal(6, 3)
+
+  org Organization @relation(fields: [orgId], references: [id])
+
+  @@unique([orgId, code])
+  @@map("tax_rates")
+}
+
+model Client {
+  id               String       @id @default(uuid())
+  orgId            String
+  legalName        String
+  billingEmail     String
+  billingAddress   String?
+  paymentTerms     PaymentTerms @default(NET30)
+  /// QuickBooks customer id once synced.
+  accountingRef    String?
+  stripeCustomerId String?
+  active           Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id])
+
+  sites     Site[]
+  contracts Contract[]
+  invoices  Invoice[]
+  users     User[]
+
+  @@index([orgId])
+  @@map("clients")
+}
+
+model Site {
+  id           String   @id @default(uuid())
+  orgId        String
+  clientId     String
+  name         String
+  address      String
+  lat          Float?
+  lng          Float?
+  /// IANA zone. Null = use the organization's.
+  timezone     String?
+  accessNotes  String?
+  contactName  String?
+  contactPhone String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  org    Organization @relation(fields: [orgId], references: [id])
+  client Client       @relation(fields: [clientId], references: [id])
+
+  accessRows    UserSiteAccess[]
+  contractLines ContractLine[]
+  coverage      ContractCoverage[]
+  schedules     Schedule[]
+  shifts        Shift[]
+  invoiceLines  InvoiceLine[]
+
+  @@index([orgId, clientId])
+  @@map("sites")
+}
+
+model Contract {
+  id                   String         @id @default(uuid())
+  orgId                String
+  clientId             String
+  leadId               String?
+  /// Same across versions of one contract.
+  contractNumber       String
+  version              Int            @default(1)
+  status               ContractStatus @default(DRAFT)
+  startDate            DateTime       @db.Date
+  endDate              DateTime?      @db.Date
+  autoRenew            Boolean        @default(false)
+  billingType          BillingType
+  billingCycle         BillingCycle
+  signedAt             DateTime?
+  signedBy             String?
+  documentFileId       String?
+  /// The previous version this one replaces.
+  supersedesContractId String?
+  createdById          String
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  org          Organization @relation(fields: [orgId], references: [id])
+  client       Client       @relation(fields: [clientId], references: [id])
+  lead         Lead?        @relation(fields: [leadId], references: [id])
+  supersedes   Contract?    @relation("ContractVersions", fields: [supersedesContractId], references: [id])
+  supersededBy Contract[]   @relation("ContractVersions")
+
+  lines     ContractLine[]
+  coverage  ContractCoverage[]
+  schedules Schedule[]
+  invoices  Invoice[]
+
+  @@unique([orgId, contractNumber, version])
+  @@index([orgId, status])
+  @@index([clientId])
+  @@map("contracts")
+}
+
+model ContractLine {
+  id          String   @id @default(uuid())
+  contractId  String
+  siteId      String
+  serviceId   String?
+  description String
+  qty         Decimal  @default(1) @db.Decimal(12, 2)
+  /// ADMIN-only field. Never serialise to other roles.
+  billRate    Decimal  @db.Decimal(12, 2)
+  /// ADMIN + SUPERVISOR. Null = fall back to the worker's defaultPayRate.
+  payRate     Decimal? @db.Decimal(12, 2)
+  estMinutes  Int?
+  taxCode     String?
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  site     Site     @relation(fields: [siteId], references: [id])
+  service  Service? @relation(fields: [serviceId], references: [id])
+
+  @@index([contractId])
+  @@map("contract_lines")
+}
+
+/// What makes scheduling generative. Times are "HH:mm" local to the site's timezone.
+model ContractCoverage {
+  id              String          @id @default(uuid())
+  contractId      String
+  siteId          String
+  patternType     CoveragePattern
+  /// 1 = Monday ... 7 = Sunday. WEEKLY only.
+  weekdays        Int[]
+  timeStart       String?
+  timeEnd         String?
+  /// INTERVAL only: one visit every N days.
+  intervalDays    Int?
+  /// AD_HOC only: how many visits the contract promises per period (informational, shifts are added by hand).
+  visitsPerPeriod Int?
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  site     Site     @relation(fields: [siteId], references: [id])
+
+  @@index([contractId])
+  @@map("contract_coverage")
+}
+
+// =============================================================================
+// Scheduling module
+// =============================================================================
+
+model Schedule {
+  id              String         @id @default(uuid())
+  orgId           String
+  contractId      String
+  siteId          String
+  supervisorId    String?
+  periodStart     DateTime       @db.Date
+  periodEnd       DateTime       @db.Date
+  status          ScheduleStatus @default(DRAFT)
+  /// Frozen copy of the contract terms at generation time. Everything downstream prices off this.
+  termsSnapshot   Json
+  contractVersion Int
+  publishedAt     DateTime?
+  lockedAt        DateTime?
+  closedAt        DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  contract Contract @relation(fields: [contractId], references: [id])
+  site     Site     @relation(fields: [siteId], references: [id])
+
+  shifts Shift[]
+
+  @@index([orgId, status])
+  @@index([contractId, siteId, periodStart])
+  @@map("schedules")
+}
+
+model Shift {
+  id              String      @id @default(uuid())
+  orgId           String
+  scheduleId      String
+  siteId          String
+  assignedUserId  String?
+  scheduledStart  DateTime
+  scheduledEnd    DateTime
+  status          ShiftStatus @default(OPEN)
+  /// Contract line id this shift is for, when it maps to exactly one.
+  serviceRef      String?
+  billableQty     Decimal?    @db.Decimal(12, 2)
+  notes           String?
+  isExtra         Boolean     @default(false)
+  cancelledReason String?
+  createdById     String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  site     Site     @relation(fields: [siteId], references: [id])
+
+  offers    ShiftOffer[]
+  timesheet TimesheetEntry?
+  workLogs  WorkLog[]
+
+  @@index([scheduleId])
+  @@index([assignedUserId, scheduledStart])
+  @@index([siteId, scheduledStart])
+  @@index([orgId, status, scheduledStart])
+  @@map("shifts")
+}
+
+model ShiftOffer {
+  id      String      @id @default(uuid())
+  shiftId String
+  userId  String
+  status  OfferStatus @default(OFFERED)
+  at      DateTime    @default(now())
+
+  shift Shift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  @@unique([shiftId, userId])
+  @@index([userId, status])
+  @@map("shift_offers")
+}
+
+// =============================================================================
+// Timesheets module
+// =============================================================================
+
+model TimesheetEntry {
+  id               String          @id @default(uuid())
+  orgId            String
+  /// One entry per shift.
+  shiftId          String          @unique
+  userId           String
+  clockInAt        DateTime?
+  clockInLat       Float?
+  clockInLng       Float?
+  clockOutAt       DateTime?
+  clockOutLat      Float?
+  clockOutLng      Float?
+  breakMinutes     Int             @default(0)
+  scheduledMinutes Int
+  actualMinutes    Int?
+  status           TimesheetStatus @default(OPEN)
+  approvedById     String?
+  approvedAt       DateTime?
+  adjustmentReason String?
+  rejectionReason  String?
+  /// Stamped at approval so later rate changes never move historical money.
+  payRateSnapshot  Decimal?        @db.Decimal(12, 2)
+  billRateSnapshot Decimal?        @db.Decimal(12, 2)
+  /// false = client is not charged (redo of a failed visit).
+  billable         Boolean         @default(true)
+  /// false = worker is not paid. Independent of `billable`.
+  payable          Boolean         @default(true)
+  /// Set when the system closed the entry at scheduled end (missing clock-out).
+  autoClosed       Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  shift      Shift                @relation(fields: [shiftId], references: [id])
+  exceptions TimesheetException[]
+
+  @@index([orgId, status])
+  @@index([userId, clockInAt])
+  @@map("timesheet_entries")
+}
+
+model TimesheetException {
+  id               String        @id @default(uuid())
+  timesheetEntryId String
+  type             ExceptionType
+  detail           Json?
+  resolved         Boolean       @default(false)
+  resolvedById     String?
+  resolvedAt       DateTime?
+  createdAt        DateTime      @default(now())
+
+  entry TimesheetEntry @relation(fields: [timesheetEntryId], references: [id], onDelete: Cascade)
+
+  @@unique([timesheetEntryId, type])
+  @@index([resolved, createdAt])
+  @@map("timesheet_exceptions")
+}
+
+model WorkLog {
+  id      String      @id @default(uuid())
+  orgId   String
+  shiftId String
+  userId  String
+  kind    WorkLogKind
+  fileId  String?
+  body    String?
+  /// Checklist items etc.
+  data    Json?
+  at      DateTime    @default(now())
+
+  shift Shift @relation(fields: [shiftId], references: [id])
+
+  @@index([shiftId, at])
+  @@map("work_logs")
+}
+
+// =============================================================================
+// Invoices module
+// =============================================================================
+
+model Invoice {
+  id                 String        @id @default(uuid())
+  orgId              String
+  clientId           String
+  contractId         String
+  invoiceNumber      String
+  periodStart        DateTime      @db.Date
+  periodEnd          DateTime      @db.Date
+  issueDate          DateTime      @db.Date
+  dueDate            DateTime      @db.Date
+  subtotal           Decimal       @db.Decimal(12, 2)
+  tax                Decimal       @db.Decimal(12, 2)
+  total              Decimal       @db.Decimal(12, 2)
+  amountPaid         Decimal       @default(0) @db.Decimal(12, 2)
+  status             InvoiceStatus @default(DRAFT)
+  /// Review flags raised by the invoice run, e.g. { "unapprovedTimesheets": 3 }.
+  flags              Json?
+  notes              String?
+  accountingRef      String?
+  accountingSyncedAt DateTime?
+  stripeInvoiceId    String?
+  paymentUrl         String?
+  paidAt             DateTime?
+  approvedById       String?
+  approvedAt         DateTime?
+  sentAt             DateTime?
+  createdById        String
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  client   Client   @relation(fields: [clientId], references: [id])
+  contract Contract @relation(fields: [contractId], references: [id])
+
+  lines    InvoiceLine[]
+  payments Payment[]
+
+  @@unique([orgId, invoiceNumber])
+  @@index([orgId, status])
+  @@index([clientId])
+  @@index([contractId, periodStart])
+  @@map("invoices")
+}
+
+model InvoiceLine {
+  id          String            @id @default(uuid())
+  invoiceId   String
+  siteId      String?
+  sourceType  InvoiceLineSource
+  sourceId    String?
+  description String
+  /// 4 decimals so hourly quantities (7.6667 h) don't lose precision before the amount is rounded to cents.
+  qty         Decimal           @db.Decimal(12, 4)
+  unitRate    Decimal           @db.Decimal(12, 2)
+  amount      Decimal           @db.Decimal(12, 2)
+  taxCode     String?
+  taxAmount   Decimal           @default(0) @db.Decimal(12, 2)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  site    Site?   @relation(fields: [siteId], references: [id])
+
+  @@index([invoiceId])
+  @@index([sourceType, sourceId])
+  @@map("invoice_lines")
+}
+
+model Payment {
+  id                 String    @id @default(uuid())
+  orgId              String
+  invoiceId          String
+  amount             Decimal   @db.Decimal(12, 2)
+  method             String
+  externalRef        String?
+  receivedAt         DateTime
+  recordedById       String?
+  accountingSyncedAt DateTime?
+  createdAt          DateTime  @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@unique([invoiceId, externalRef])
+  @@index([invoiceId])
+  @@map("payments")
+}
+
+// =============================================================================
+// Leads module
+// =============================================================================
+
+model Lead {
+  id                  String     @id @default(uuid())
+  orgId               String
+  companyName         String
+  contactName         String
+  email               String
+  phone               String?
+  /// Digits only, for duplicate detection.
+  phoneNorm           String?
+  address             String?
+  source              LeadSource
+  sourceUrl           String?
+  utm                 Json?
+  serviceInterest     String?
+  message             String?
+  status              LeadStatus @default(NEW)
+  ownerId             String?
+  lostReason          String?
+  convertedClientId   String?
+  convertedContractId String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  activities LeadActivity[]
+  surveys    LeadSiteSurvey[]
+  contracts  Contract[]
+
+  @@index([orgId, status, createdAt])
+  @@index([orgId, email])
+  @@index([orgId, phoneNorm])
+  @@map("leads")
+}
+
+model LeadActivity {
+  id     String           @id @default(uuid())
+  leadId String
+  userId String?
+  type   LeadActivityType
+  body   String
+  at     DateTime         @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId, at])
+  @@map("lead_activities")
+}
+
+model LeadSiteSurvey {
+  id           String   @id @default(uuid())
+  leadId       String
+  address      String
+  /// [{ name, serviceId?, qty, estMinutes?, notes? }]
+  units        Json
+  accessNotes  String?
+  /// FileObject ids.
+  photoFileIds String[]
+  createdAt    DateTime @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("lead_site_surveys")
+}

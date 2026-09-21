@@ -1,0 +1,60 @@
+{
+  "name": "filter-portal-be",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Authentication backend for the FilterGO portal",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "admin:create": "tsx src/scripts/create-admin.ts",
+    "postinstall": "prisma generate"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "prisma",
+      "esbuild",
+      "@node-rs/argon2"
+    ]
+  },
+  "dependencies": {
+    "@fastify/cors": "11.3.0",
+    "@fastify/helmet": "13.1.1",
+    "@fastify/multipart": "10.1.1",
+    "@fastify/rate-limit": "11.2.0",
+    "@node-rs/argon2": "2.2.1",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "dotenv": "18.0.1",
+    "fastify": "5.12.5",
+    "luxon": "3.7.2",
+    "nodemailer": "10.0.10",
+    "pg": "8.23.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/luxon": "3.7.5",
+    "@types/node": "24.10.1",
+    "@types/nodemailer": "8.0.2",
+    "@types/pg": "8.23.1",
+    "@vitest/coverage-v8": "5.0.1",
+    "prisma": "7.10.0",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "5.0.1"
+  }
+}
