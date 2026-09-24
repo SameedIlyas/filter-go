@@ -69,20 +69,14 @@ const Header = ({ mode }: { mode: Mode }) => {
           <div className='flex items-center gap-2 sm:gap-4'>
             <ModeDropdown />
             {isBelowLgScreen ? (
-              <CustomIconButton
-                component={Link}
-                variant='contained'
-                href='https://www.filter-go.com/'
-                color='primary'
-                target='_blank'
-              >
+              <CustomIconButton component={Link} variant='contained' href='/' color='primary' target='_blank'>
                 <i className='bx-cart text-xl' />
               </CustomIconButton>
             ) : (
               <Button
                 component={Link}
                 variant='contained'
-                href='https://www.filter-go.com/'
+                href='/'
                 startIcon={<i className='bx-cart text-xl' />}
                 className='whitespace-nowrap'
                 target='_blank'

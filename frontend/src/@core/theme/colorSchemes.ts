@@ -4,14 +4,18 @@ import type { Theme } from '@mui/material/styles'
 // Type Imports
 import type { Skin } from '@core/types'
 
+// Config Imports
+import { brandColors, statusColors } from '@configs/brand'
+
 const colorSchemes = (skin: Skin): Theme['colorSchemes'] => {
   return {
     light: {
       palette: {
         primary: {
-          main: '#2DA551',
-          light: '#57B774',
-          dark: '#299549',
+          main: brandColors.orange,
+          light: brandColors.orangeLight,
+          dark: brandColors.orangeDark,
+          contrastText: '#FFF',
           lighterOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.08)',
           lightOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.16)',
           mainOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.24)',
@@ -19,9 +23,9 @@ const colorSchemes = (skin: Skin): Theme['colorSchemes'] => {
           darkerOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.38)'
         },
         secondary: {
-          main: '#7A8A7C',
-          light: '#95A196',
-          dark: '#6E7C70',
+          main: brandColors.navy,
+          light: brandColors.navyMid,
+          dark: brandColors.navyDeep,
           contrastText: '#FFF',
           lighterOpacity: 'rgb(var(--mui-palette-secondary-mainChannel) / 0.08)',
           lightOpacity: 'rgb(var(--mui-palette-secondary-mainChannel) / 0.16)',
@@ -30,9 +34,9 @@ const colorSchemes = (skin: Skin): Theme['colorSchemes'] => {
           darkerOpacity: 'rgb(var(--mui-palette-secondary-mainChannel) / 0.38)'
         },
         error: {
-          main: '#EB3D63',
-          light: '#EF6482',
-          dark: '#D43759',
+          main: statusColors.error,
+          light: '#E4657C',
+          dark: '#C33249',
           contrastText: '#FFF',
           lighterOpacity: 'rgb(var(--mui-palette-error-mainChannel) / 0.08)',
           lightOpacity: 'rgb(var(--mui-palette-error-mainChannel) / 0.16)',
@@ -41,8 +45,8 @@ const colorSchemes = (skin: Skin): Theme['colorSchemes'] => {
           darkerOpacity: 'rgb(var(--mui-palette-error-mainChannel) / 0.38)'
         },
         warning: {
-          main: '#FFAB1D',
-          light: '#FFBC4A',
+          main: statusColors.warning,
+          light: '#F0B650',
           dark: '#E69A1A',
           contrastText: '#FFF',
           lighterOpacity: 'rgb(var(--mui-palette-warning-mainChannel) / 0.08)',
@@ -161,9 +165,10 @@ const colorSchemes = (skin: Skin): Theme['colorSchemes'] => {
     dark: {
       palette: {
         primary: {
-          main: '#2DA551',
-          light: '#57B774',
-          dark: '#299549',
+          main: '#F5A04A',
+          light: '#F9BC7D',
+          dark: brandColors.orangeDark,
+          contrastText: '#16202B',
           lighterOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.08)',
           lightOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.16)',
           mainOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.24)',
@@ -171,9 +176,9 @@ const colorSchemes = (skin: Skin): Theme['colorSchemes'] => {
           darkerOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.38)'
         },
         secondary: {
-          main: '#7A8A7C',
-          light: '#95A196',
-          dark: '#6E7C70',
+          main: '#8FB2CC',
+          light: '#B5CEE0',
+          dark: '#5C8BAC',
           contrastText: '#FFF',
           lighterOpacity: 'rgb(var(--mui-palette-secondary-mainChannel) / 0.08)',
           lightOpacity: 'rgb(var(--mui-palette-secondary-mainChannel) / 0.16)',
@@ -182,9 +187,9 @@ const colorSchemes = (skin: Skin): Theme['colorSchemes'] => {
           darkerOpacity: 'rgb(var(--mui-palette-secondary-mainChannel) / 0.38)'
         },
         error: {
-          main: '#EB3D63',
-          light: '#EF6482',
-          dark: '#D43759',
+          main: statusColors.error,
+          light: '#E4657C',
+          dark: '#C33249',
           contrastText: '#FFF',
           lighterOpacity: 'rgb(var(--mui-palette-error-mainChannel) / 0.08)',
           lightOpacity: 'rgb(var(--mui-palette-error-mainChannel) / 0.16)',
@@ -193,8 +198,8 @@ const colorSchemes = (skin: Skin): Theme['colorSchemes'] => {
           darkerOpacity: 'rgb(var(--mui-palette-error-mainChannel) / 0.38)'
         },
         warning: {
-          main: '#FFAB1D',
-          light: '#FFBC4A',
+          main: statusColors.warning,
+          light: '#F0B650',
           dark: '#E69A1A',
           contrastText: '#FFF',
           lighterOpacity: 'rgb(var(--mui-palette-warning-mainChannel) / 0.08)',

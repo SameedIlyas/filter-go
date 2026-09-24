@@ -1,6 +1,6 @@
 @layer theme, base, components, utilities;
-@import "tailwindcss/theme.css" layer(theme) important;
-@import "tailwindcss/utilities.css" layer(utilities) important;
+@import 'tailwindcss/theme.css' layer(theme) important;
+@import 'tailwindcss/utilities.css' layer(utilities) important;
 @plugin 'tailwindcss-logical';
 
 @theme {
@@ -37,9 +37,9 @@
   --color-actionDisabledBackground: var(--mui-palette-action-disabledBackground);
   --color-backgroundPaper: var(--mui-palette-background-paper);
   --color-backgroundDefault: var(--mui-palette-background-default);
-  --color-facebook: #4267B2;
-  --color-twitter: #1DA1F2;
-  --color-linkedin: #007BB6;
+  --color-facebook: #4267b2;
+  --color-twitter: #1da1f2;
+  --color-linkedin: #007bb6;
   --color-backgroundChat: var(--mui-palette-customColors-chatBg);
   --color-backdrop: var(--backdrop-color);
 
@@ -87,7 +87,7 @@
   --primary-color: var(--mui-palette-primary-main);
   --background-color: var(--mui-palette-background-default);
   --background-color-rgb: var(--mui-palette-background-defaultChannel);
-  --header-height:78px;
+  --header-height: 78px;
   --header-z-index: var(--mui-zIndex-appBar);
   --footer-z-index: 10;
   --customizer-z-index: var(--mui-zIndex-drawer);
@@ -103,7 +103,6 @@
 }
 
 @layer base {
-
   *,
   ::before,
   ::after {
@@ -220,4 +219,42 @@ code {
   color: var(--mui-palette-info-main);
   background-color: rgb(var(--mui-palette-info-mainChannel) / 0.08);
   border: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Public website
+ * ------------------------------------------------------------------------- */
+
+/* Keyboard-only shortcut past the header straight into the page content */
+.public-skip-link {
+  position: absolute;
+  inset-block-start: -100px;
+  inset-inline-start: 16px;
+  z-index: 2000;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background-color: #1b9aaa;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: inset-block-start 0.25s ease;
+}
+
+.public-skip-link:focus-visible {
+  inset-block-start: 16px;
+}
+
+/* Pulse behind the hero's status dot */
+@keyframes coolcraftPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(45 165 81 / 60%);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgb(45 165 81 / 0%);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgb(45 165 81 / 0%);
+  }
 }

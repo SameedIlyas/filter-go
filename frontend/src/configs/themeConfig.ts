@@ -54,9 +54,9 @@ export type Config = {
 }
 
 const themeConfig: Config = {
-  templateName: 'Breeze',
+  templateName: 'CoolCraft',
   homePageUrl: '/dashboards/crm',
-  settingsCookieName: 'breeze-settings',
+  settingsCookieName: 'coolcraft-settings',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'
   semiDark: false, // true, false

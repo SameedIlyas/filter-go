@@ -103,12 +103,7 @@ const Footer = () => {
                 Products
               </Typography>
               <div className='flex flex-col gap-4'>
-                <Typography
-                  component={Link}
-                  href='https://www.filter-go.com/'
-                  color='white'
-                  className='opacity-[0.78]'
-                >
+                <Typography component={Link} href='/' color='white' className='opacity-[0.78]'>
                   Page builder
                 </Typography>
                 <Typography
@@ -127,12 +122,7 @@ const Footer = () => {
                 >
                   UI Kits
                 </Typography>
-                <Typography
-                  component={Link}
-                  href='https://www.filter-go.com/'
-                  color='white'
-                  className='opacity-[0.78]'
-                >
+                <Typography component={Link} href='/' color='white' className='opacity-[0.78]'>
                   Illustrations
                 </Typography>
               </div>
@@ -190,12 +180,8 @@ const Footer = () => {
         >
           <Typography className='text-[#D3D4DC]'>
             <span>{`© ${new Date().getFullYear()} `}</span>
-            <Link
-              href='https://www.filter-go.com/'
-              target='_blank'
-              className='font-medium text-white'
-            >
-              FilterGO
+            <Link href='/' target='_blank' className='font-medium text-white'>
+              CoolCraft
             </Link>
             <span>{` · Fresh Air Delivered`}</span>
           </Typography>

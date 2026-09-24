@@ -79,7 +79,7 @@ const Login = () => {
   } = useForm<FormData>({
     resolver: valibotResolver(schema),
     defaultValues: {
-      email: 'admin@filter-go.com',
+      email: 'admin@coolcraft.com',
       password: 'admin'
     }
   })
@@ -95,7 +95,12 @@ const Login = () => {
 
     if (res.ok) {
       // Vars
-      const redirectURL = searchParams.get('redirectTo') ?? '/'
+      /*
+       * `/` is the public marketing site, so a signed-in user must land on the
+       * portal instead. Anyone bounced here by the auth guard carries their
+       * original destination in `redirectTo`.
+       */
+      const redirectURL = searchParams.get('redirectTo') ?? themeConfig.homePageUrl
 
       router.replace(redirectURL)
 

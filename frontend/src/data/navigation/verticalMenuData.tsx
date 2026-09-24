@@ -534,7 +534,7 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
       {
         label: 'raiseSupport',
         icon: 'bx-bxs-buoy',
-        href: 'https://www.filter-go.com/contact/',
+        href: '/contact',
         suffix: <i className='bx-link-external text-xl' />,
         target: '_blank'
       },
@@ -558,7 +558,7 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
           },
           {
             label: 'externalLink',
-            href: 'https://www.filter-go.com/',
+            href: '/',
             target: '_blank',
             suffix: <i className='bx-link-external text-xl' />
           },

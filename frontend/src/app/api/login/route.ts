@@ -16,7 +16,7 @@ type ResponseUser = Omit<UserTable, 'password'>
  * Signs a user in and sets the session cookie.
  *
  * This is the single seam between the portal and whatever authenticates
- * FilterGO staff for real. To swap in the live API, replace the `users.find`
+ * CoolCraft staff for real. To swap in the live API, replace the `users.find`
  * lookup below with a call to it and keep the rest of the handler as-is.
  */
 export async function POST(req: Request) {

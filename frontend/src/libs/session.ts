@@ -18,11 +18,11 @@ import type { SessionUser } from '@/types/sessionTypes'
  * is readable by the client but cannot be tampered with, so it must never
  * carry secrets — keep it to display data plus an expiry.
  *
- * To move onto the real FilterGO API, leave this file alone and change only
+ * To move onto the real CoolCraft API, leave this file alone and change only
  * the credential check in `src/app/api/login/route.ts`.
  */
 
-export const SESSION_COOKIE_NAME = 'breeze-session'
+export const SESSION_COOKIE_NAME = 'coolcraft-session'
 
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 7 // 7 days
 

@@ -5,25 +5,28 @@ export type PrimaryColorConfig = {
   dark?: string
 }
 
+// Config Imports
+import { brandColors } from '@configs/brand'
+
 /**
- * Breeze — primary colour swatches offered in the Customizer.
+ * CoolCraft — primary colour swatches offered in the Customizer.
  *
- * Index 0 is the product default and is sourced directly from the FilterGO
- * wordmark (#2DA551). The remaining swatches are drawn from the same brand
- * family (Gusty's forest green) plus three neutral-safe alternates.
+ * Index 0 is the product default and is the same orange the public website
+ * uses for its calls to action, so a button looks identical on both surfaces.
+ * Index 1 is the brand navy. The rest are neutral-safe alternates.
  */
 const primaryColorConfig: PrimaryColorConfig[] = [
   {
-    name: 'filtergo-green',
-    light: '#57B774',
-    main: '#2DA551',
-    dark: '#299549'
+    name: 'coolcraft-orange',
+    light: brandColors.orangeLight,
+    main: brandColors.orange,
+    dark: brandColors.orangeDark
   },
   {
-    name: 'forest',
-    light: '#667D67',
-    main: '#405C41',
-    dark: '#3A533B'
+    name: 'coolcraft-navy',
+    light: brandColors.navyMid,
+    main: brandColors.navy,
+    dark: brandColors.navyDeep
   },
   {
     name: 'teal',

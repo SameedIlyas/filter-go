@@ -2,10 +2,10 @@
 import type { SVGAttributes } from 'react'
 
 /**
- * Breeze mark (FilterGO).
+ * CoolCraft mark.
  *
  * A rounded filter housing with a double chevron reading through it — the
- * chevrons double as filter pleats and as the "GO" in FilterGO. Drawn in
+ * chevrons double as filter pleats and as airflow direction. Drawn in
  * `currentColor` so it inherits the active primary colour in both light and
  * dark mode, and stays legible down to ~20px.
  */

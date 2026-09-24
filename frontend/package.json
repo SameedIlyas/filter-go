@@ -1,5 +1,5 @@
 {
-  "name": "breeze",
+  "name": "coolcraft",
   "version": "4.0.2",
   "license": "Commercial",
   "private": true,
@@ -60,6 +60,7 @@
     "input-otp": "1.4.2",
     "keen-slider": "6.8.6",
     "mapbox-gl": "3.17.0",
+    "motion": "^13.4.1",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-apexcharts": "1.4.1",

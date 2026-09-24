@@ -26,8 +26,8 @@ import '@/app/globals.css'
 import '@assets/iconify-icons/generated-icons.css'
 
 export const metadata = {
-  title: 'Breeze',
-  description: 'Breeze by FilterGO — schedule, dispatch and track air filter replacements. Fresh Air Delivered.'
+  title: 'CoolCraft',
+  description: 'CoolCraft — schedule, dispatch and track commercial air filter replacements.'
 }
 
 const Layout = async ({ children }: ChildrenType) => {

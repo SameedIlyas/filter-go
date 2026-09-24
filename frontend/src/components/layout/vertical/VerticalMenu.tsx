@@ -325,7 +325,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
           </MenuItem>
           <MenuItem
             icon={<i className='bx-bxs-buoy' />}
-            href='https://www.filter-go.com/contact/'
+            href='/contact'
             suffix={<i className='bx-link-external text-xl' />}
             target='_blank'
           >
@@ -343,11 +343,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
             <MenuItem suffix={<CustomChip label='New' size='small' color='info' round='true' />}>
               itemWithBadge
             </MenuItem>
-            <MenuItem
-              href='https://www.filter-go.com/'
-              target='_blank'
-              suffix={<i className='bx-link-external text-xl' />}
-            >
+            <MenuItem href='/' target='_blank' suffix={<i className='bx-link-external text-xl' />}>
               externalLink
             </MenuItem>
             <SubMenu label='menuLevels'>

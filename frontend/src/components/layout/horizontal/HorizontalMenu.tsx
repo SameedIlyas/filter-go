@@ -352,7 +352,7 @@ const HorizontalMenu = () => {
           </MenuItem>
           <MenuItem
             icon={<i className='bx-bxs-buoy' />}
-            href='https://www.filter-go.com/contact/'
+            href='/contact'
             suffix={<i className='bx-link-external text-xl' />}
             target='_blank'
           >
@@ -374,7 +374,7 @@ const HorizontalMenu = () => {
           </MenuItem>
           <MenuItem
             icon={<i className='bx-link' />}
-            href='https://www.filter-go.com/'
+            href='/'
             target='_blank'
             suffix={<i className='bx-link-external text-xl' />}
           >

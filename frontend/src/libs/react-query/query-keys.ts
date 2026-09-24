@@ -11,7 +11,7 @@
  * @see https://tkdodo.eu/blog/effective-react-query-keys
  */
 export const queryKeys = {
-  root: ['breeze'] as const,
+  root: ['coolcraft'] as const,
 
   /** `GET /apps/user-list` — reference feature, see `src/libs/api/queries/users.ts`. */
   users: {

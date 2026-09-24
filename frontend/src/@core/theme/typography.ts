@@ -1,7 +1,7 @@
 // MUI Imports
 import type { Theme } from '@mui/material/styles'
 
-const typography = (fontFamily: string): Theme['typography'] =>
+const typography = (fontFamily: string, displayFamily?: string): Theme['typography'] =>
   ({
     fontFamily:
       typeof fontFamily === 'undefined' || fontFamily === ''
@@ -22,31 +22,37 @@ const typography = (fontFamily: string): Theme['typography'] =>
         : fontFamily,
     fontSize: 13.125,
     h1: {
+      fontFamily: displayFamily ?? fontFamily,
       fontSize: '2.875rem',
       fontWeight: 500,
       lineHeight: 1.47826
     },
     h2: {
+      fontFamily: displayFamily ?? fontFamily,
       fontSize: '2.375rem',
       fontWeight: 500,
       lineHeight: 1.47368421
     },
     h3: {
+      fontFamily: displayFamily ?? fontFamily,
       fontSize: '1.75rem',
       fontWeight: 500,
       lineHeight: 1.5
     },
     h4: {
+      fontFamily: displayFamily ?? fontFamily,
       fontSize: '1.5rem',
       fontWeight: 500,
       lineHeight: 1.58334
     },
     h5: {
+      fontFamily: displayFamily ?? fontFamily,
       fontSize: '1.125rem',
       fontWeight: 500,
       lineHeight: 1.5556
     },
     h6: {
+      fontFamily: displayFamily ?? fontFamily,
       fontSize: '0.9375rem',
       fontWeight: 500,
       lineHeight: 1.46667
