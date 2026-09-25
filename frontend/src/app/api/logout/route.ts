@@ -1,14 +1,17 @@
-// Next Imports
 import { NextResponse } from 'next/server'
 
-// Lib Imports
-import { clearSessionCookie } from '@/libs/session'
+import { callApi } from '@/libs/backend'
+import { clearSessionCookie, getSessionToken } from '@/libs/session'
 
-/** Signs the current user out by expiring the session cookie. */
 export async function POST() {
-  const response = NextResponse.json({ ok: true })
+  const token = await getSessionToken()
 
-  response.cookies.set(clearSessionCookie())
+  // Best effort: the cookie is cleared no matter what.
+  if (token) await callApi('/v1/auth/logout', { method: 'POST', token }).catch(() => undefined)
+
+  const response = NextResponse.json({ success: true, data: { ok: true }, error: null })
+
+  clearSessionCookie(response)
 
   return response
 }

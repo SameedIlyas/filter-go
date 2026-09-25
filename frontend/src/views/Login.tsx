@@ -57,7 +57,7 @@ const schema = object({
   password: pipe(
     string(),
     nonEmpty('This field is required'),
-    minLength(5, 'Password must be at least 5 characters long')
+    nonEmpty('This field is required')
   )
 })
 
@@ -65,6 +65,7 @@ const Login = () => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
+  const [rememberMe, setRememberMe] = useState(false)
 
   // Hooks
   const router = useRouter()
@@ -79,8 +80,8 @@ const Login = () => {
   } = useForm<FormData>({
     resolver: valibotResolver(schema),
     defaultValues: {
-      email: 'admin@coolcraft.com',
-      password: 'admin'
+      email: '',
+      password: ''
     }
   })
 
@@ -90,7 +91,7 @@ const Login = () => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: data.email, password: data.password })
+      body: JSON.stringify({ email: data.email, password: data.password, rememberMe })
     })
 
     if (res.ok) {
@@ -107,7 +108,17 @@ const Login = () => {
       // Re-render server components so they pick up the new session cookie
       router.refresh()
     } else {
-      setErrorState((await res.json()) as ErrorType)
+      const payload = (await res.json().catch(() => null)) as { error?: { code?: string; message?: string } } | null
+      const code = payload?.error?.code
+
+      const message =
+        code === 'TOO_MANY_ATTEMPTS'
+          ? 'Too many attempts. Please wait a few minutes or reset your password.'
+          : code === 'ACCOUNT_DISABLED'
+            ? 'Your account is disabled. Contact your administrator.'
+            : (payload?.error?.message ?? 'Sign-in failed. Please try again.')
+
+      setErrorState({ message: [message] })
     }
   }
 
@@ -195,7 +206,10 @@ const Login = () => {
               )}
             />
             <div className='flex justify-between items-center flex-wrap gap-x-3 gap-y-1'>
-              <FormControlLabel control={<Checkbox />} label='Remember me' />
+              <FormControlLabel
+                control={<Checkbox checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />}
+                label='Remember me'
+              />
               <Typography className='text-end' color='primary.main' component={Link} href={'/forgot-password'}>
                 Forgot password?
               </Typography>

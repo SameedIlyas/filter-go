@@ -20,5 +20,18 @@ export const queryKeys = {
     list: (params: { role?: string; status?: string } = {}) => [...queryKeys.root, 'users', 'list', params] as const,
     details: () => [...queryKeys.root, 'users', 'detail'] as const,
     detail: (userId: number) => [...queryKeys.root, 'users', 'detail', userId] as const
+  },
+
+  /** `/api/backend/leads/*` — see `src/libs/api/queries/leads.ts`. */
+  leads: {
+    all: () => [...queryKeys.root, 'leads'] as const,
+    lists: () => [...queryKeys.root, 'leads', 'list'] as const,
+    list: (filters: object) => [...queryKeys.root, 'leads', 'list', filters] as const,
+    allCounts: () => [...queryKeys.root, 'leads', 'counts'] as const,
+    counts: (filters: object) => [...queryKeys.root, 'leads', 'counts', filters] as const,
+    one: (id: string) => [...queryKeys.root, 'leads', 'one', id] as const,
+    detail: (id: string) => [...queryKeys.root, 'leads', 'one', id, 'detail'] as const,
+    activities: (id: string, limit: number) => [...queryKeys.root, 'leads', 'one', id, 'activities', limit] as const,
+    owners: () => [...queryKeys.root, 'leads', 'owners'] as const
   }
 } as const
