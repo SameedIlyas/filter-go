@@ -36,7 +36,9 @@ beforeEach(async () => {
   const otherOrg = await ensureOrg(t, 'Org B')
   const otherAdmin = await createUser(t, { role: 'ADMIN', orgId: otherOrg.id, email: 'admin@b.test' })
 
-  ;[adminToken, supToken, otherAdminToken] = await Promise.all([admin, sup, otherAdmin].map(user => loginAs(t, user.email)))
+  adminToken = await loginAs(t, admin.email)
+  supToken = await loginAs(t, sup.email)
+  otherAdminToken = await loginAs(t, otherAdmin.email)
 })
 
 const qualifiedLead = (overrides: Parameters<typeof makeLead>[2] = {}) =>

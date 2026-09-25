@@ -40,7 +40,10 @@ beforeEach(async () => {
   const sup2 = await createUser(t, { role: 'SUPERVISOR', email: 'sup2@a.test' })
   const otherAdmin = await createUser(t, { role: 'ADMIN', orgId: otherOrgId, email: 'admin@b.test' })
 
-  ;[adminToken, supToken, sup2Token, otherAdminToken] = await Promise.all([admin, sup, sup2, otherAdmin].map(user => loginAs(t, user.email)))
+  adminToken = await loginAs(t, admin.email)
+  supToken = await loginAs(t, sup.email)
+  sup2Token = await loginAs(t, sup2.email)
+  otherAdminToken = await loginAs(t, otherAdmin.email)
 })
 
 describe('POST /v1/leads/:id/surveys', () => {

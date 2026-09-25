@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import type { Shift } from '../src/generated/prisma/client.js'
 import { createWorkLog } from '../src/modules/timesheets/worklogs.js'
-import { body, client, createTestApp, ensureOrg, grantSiteAccess, makeFile, makeSite, resetDb, signIn } from './helpers.js'
+import { body, client, createTestApp, createUser, ensureOrg, grantSiteAccess, makeFile, makeSite, resetDb, signIn } from './helpers.js'
 import type { TestApp } from './helpers.js'
 import { at, buildWorld, END, entryFor, otherOrgAdmin, outsideSupervisor, shiftFor, START } from './timesheets.setup.js'
 import type { World } from './timesheets.setup.js'
@@ -75,7 +75,7 @@ describe('POST /v1/shifts/:id/work-logs', () => {
   it('an ISSUE notifies the site supervisors and nobody else', async () => {
     const otherSupervisor = await signIn(t, 'SUPERVISOR')
     const elsewhere = await makeSite(t)
-    const disabled = await signIn(t, 'SUPERVISOR', { status: 'DISABLED' })
+    const disabled = { user: await createUser(t, { role: 'SUPERVISOR', status: 'DISABLED' }) }
     const peerWorker = await signIn(t, 'FIELD_USER')
 
     await grantSiteAccess(t, otherSupervisor.user.id, elsewhere.id)

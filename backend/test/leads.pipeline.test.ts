@@ -42,9 +42,12 @@ beforeEach(async () => {
   const otherOrg = await ensureOrg(t, 'Org B')
   const otherAdmin = await createUser(t, { role: 'ADMIN', orgId: otherOrg.id, email: 'admin@b.test' })
 
-  ;[adminToken, supToken, sup2Token, fieldToken, clientToken, otherAdminToken] = await Promise.all(
-    [admin, sup, sup2, field, clientUser, otherAdmin].map(user => loginAs(t, user.email))
-  )
+  adminToken = await loginAs(t, admin.email)
+  supToken = await loginAs(t, sup.email)
+  sup2Token = await loginAs(t, sup2.email)
+  fieldToken = await loginAs(t, field.email)
+  clientToken = await loginAs(t, clientUser.email)
+  otherAdminToken = await loginAs(t, otherAdmin.email)
 })
 
 describe('access control', () => {
