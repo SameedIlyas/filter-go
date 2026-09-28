@@ -64,10 +64,48 @@ export async function callApi<T>(path: string, { method = 'GET', body, token }: 
   if (!json.success) {
     const { code, message, details, requestId } = json.error
 
-    if (code === 'INVALID_SERVICE_KEY') console.error('FilterGO API rejected the service key. Check AUTH_API_SERVICE_KEY.')
+    if (code === 'INVALID_SERVICE_KEY')
+      console.error('FilterGO API rejected the service key. Check AUTH_API_SERVICE_KEY.')
 
     throw new BackendError(res.status, code, message, details, requestId)
   }
 
   return { data: json.data, meta: (json as { meta?: PageMeta }).meta }
+}
+
+/**
+ * Passes a request through untouched (multipart uploads in, file bytes out). The caller relays the Response,
+ * so JSON errors from the API keep their envelope.
+ */
+export async function forwardRaw(
+  path: string,
+  {
+    method = 'GET',
+    token,
+    body,
+    contentType
+  }: { method?: Method; token: string; body?: BodyInit; contentType?: string }
+) {
+  const incoming = await headers()
+  const clientIp = incoming.get('x-forwarded-for')?.split(',')[0]?.trim() ?? incoming.get('x-real-ip') ?? undefined
+
+  try {
+    return await fetch(`${BASE}${path}`, {
+      method,
+      cache: 'no-store',
+      signal: AbortSignal.timeout(60_000),
+      headers: {
+        ...(contentType ? { 'content-type': contentType } : {}),
+        ...(SERVICE_KEY ? { 'x-service-key': SERVICE_KEY } : {}),
+        ...(clientIp ? { 'x-forwarded-for': clientIp } : {}),
+        authorization: `Bearer ${token}`
+      },
+      body,
+
+      // Required by undici to stream a request body
+      ...(body ? { duplex: 'half' } : {})
+    } as RequestInit)
+  } catch {
+    throw new BackendError(502, 'BAD_GATEWAY', 'The server could not be reached.')
+  }
 }

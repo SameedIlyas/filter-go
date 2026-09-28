@@ -13,7 +13,12 @@ const ALLOWED = [
   new RegExp(`^leads(/${UUID}(/(status|activities|convert|surveys(/${UUID})?))?)?$`),
   /^users$/,
   /^org$/,
-  /^services$/
+  new RegExp(`^services(/${UUID})?$`),
+  /^tax-rates(\/[A-Za-z0-9_.-]{1,32})?$/,
+  /^audit-events$/,
+  new RegExp(`^clients(/${UUID}(/sites)?)?$`),
+  new RegExp(`^sites(/${UUID})?$`),
+  new RegExp(`^contracts(/${UUID}(/(lines|coverage|submit|sign|suspend|resume|cancel|new-version))?)?$`)
 ]
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
