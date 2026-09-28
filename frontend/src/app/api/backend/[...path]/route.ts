@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { callApi } from '@/libs/backend'
 import { errorResponse } from '@/libs/apiResponse'
+import { hitRateLimit } from '@/libs/rateLimit'
 import { getSessionToken } from '@/libs/session'
 
 const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
@@ -23,8 +24,11 @@ const ALLOWED = [
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
-const fail = (status: number, code: string, message: string) =>
-  NextResponse.json({ success: false, data: null, error: { code, message } }, { status })
+/** Generous for a busy screen (each page fires several queries), low enough to stop a runaway loop or script. */
+const REQUESTS_PER_MINUTE = 600
+
+const fail = (status: number, code: string, message: string, headers?: Record<string, string>) =>
+  NextResponse.json({ success: false, data: null, error: { code, message } }, { status, headers })
 
 async function handle(req: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const route = (await params).path.join('/')
@@ -34,6 +38,11 @@ async function handle(req: Request, { params }: { params: Promise<{ path: string
   const token = await getSessionToken()
 
   if (!token) return fail(401, 'UNAUTHENTICATED', 'You are not signed in.')
+
+  const retryAfter = hitRateLimit('api', token, REQUESTS_PER_MINUTE)
+
+  if (retryAfter)
+    return fail(429, 'RATE_LIMITED', 'Too many requests. Try again in a moment.', { 'retry-after': String(retryAfter) })
 
   const hasBody = !['GET', 'HEAD', 'DELETE'].includes(req.method)
 
