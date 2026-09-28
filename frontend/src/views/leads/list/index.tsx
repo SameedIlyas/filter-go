@@ -70,6 +70,7 @@ const LeadList = () => {
   const [view, setView] = useState<View>('table')
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<LeadStatus | undefined>()
+  const [openOnly, setOpenOnly] = useState(false)
   const [source, setSource] = useState<LeadSource | ''>('')
   const [ownerId, setOwnerId] = useState('')
   const [from, setFrom] = useState('')
@@ -85,24 +86,46 @@ const LeadList = () => {
   const q = useDebounced(search.trim())
 
   const baseFilters = useMemo(
-    () => ({ q: q || undefined, source: source || undefined, ownerId: ownerId || undefined, from: from || undefined, to: to || undefined }),
+    () => ({
+      q: q || undefined,
+      source: source || undefined,
+      ownerId: ownerId || undefined,
+      from: from || undefined,
+      to: to || undefined
+    }),
     [q, source, ownerId, from, to]
   )
 
+  // Open pipeline narrows both views; a status tab is narrower still and replaces it (the API lets `status` win too)
+  const openFilter = openOnly && !status ? { open: 'true' as const } : {}
+
   // Board shows every status at once, so it ignores the status tab and paging.
   const filters: LeadFilters =
-    view === 'board' ? { ...baseFilters, page: 1, limit: 100 } : { ...baseFilters, status, page, limit }
+    view === 'board'
+      ? { ...baseFilters, ...openFilter, page: 1, limit: 100 }
+      : { ...baseFilters, ...openFilter, status, page, limit }
 
   const leads = useLeadsQuery(filters)
   const counts = useLeadStatusCounts(baseFilters)
   const owners = useLeadOwners()
 
   // Any filter change goes back to page 1
-  useEffect(() => setPage(1), [baseFilters, status, limit])
+  useEffect(() => setPage(1), [baseFilters, status, openOnly, limit])
 
-  const hasFilters = !!(search || source || ownerId || from || to)
+  const hasFilters = !!(search || source || ownerId || from || to || openOnly)
+
+  const selectStatus = (next?: LeadStatus) => {
+    setStatus(next)
+    setOpenOnly(false)
+  }
+
+  const selectOpen = () => {
+    setStatus(undefined)
+    setOpenOnly(true)
+  }
 
   const clearFilters = () => {
+    setOpenOnly(false)
     setSearch('')
     setSource('')
     setOwnerId('')
@@ -121,8 +144,21 @@ const LeadList = () => {
   }
 
   const rowActions = (lead: Lead) => [
-    { text: 'View details', icon: <i className='bx-show' />, href: `/leads/${lead.id}`, linkProps: { className: 'flex items-center gap-2 is-full plb-2 pli-4' } },
-    { text: 'Edit', icon: <i className='bx-edit' />, menuItemProps: { onClick: () => openEdit(lead), className: 'flex items-center gap-2' } },
+    {
+      text: 'View details',
+      icon: <i className='bx-show' />,
+      href: `/leads/${lead.id}`,
+      linkProps: { className: 'flex items-center gap-2 is-full plb-2 pli-4' }
+    },
+    ...(lead.status === 'WON'
+      ? []
+      : [
+          {
+            text: 'Edit',
+            icon: <i className='bx-edit' />,
+            menuItemProps: { onClick: () => openEdit(lead), className: 'flex items-center gap-2' }
+          }
+        ]),
     ...(NEXT_STATUSES[lead.status].length > 0 ? [{ divider: true }] : []),
     ...NEXT_STATUSES[lead.status].map(target => ({
       text: target === 'LOST' ? 'Mark as lost' : target === 'NEW' ? 'Reopen' : `Move to ${STATUS_META[target].label}`,
@@ -154,7 +190,12 @@ const LeadList = () => {
           <Typography color='text.secondary'>Web intake, qualification and hand-off to contracts.</Typography>
         </div>
         <div className='flex items-center gap-3'>
-          <ToggleButtonGroup exclusive size='small' value={view} onChange={(_, next: View | null) => next && setView(next)}>
+          <ToggleButtonGroup
+            exclusive
+            size='small'
+            value={view}
+            onChange={(_, next: View | null) => next && setView(next)}
+          >
             <ToggleButton value='table' aria-label='Table view'>
               <i className='bx-list-ul' />
             </ToggleButton>
@@ -168,17 +209,32 @@ const LeadList = () => {
         </div>
       </div>
 
-      <LeadStats counts={counts.data} active={status} onSelect={next => setStatus(next)} />
+      <LeadStats
+        counts={counts.data}
+        active={status}
+        openOnly={openOnly}
+        onSelect={selectStatus}
+        onSelectOpen={selectOpen}
+      />
 
       <Card>
         {view === 'table' && (
-          <Tabs value={status ?? 'ALL'} onChange={(_, value) => setStatus(value === 'ALL' ? undefined : value)} variant='scrollable' className='border-be'>
+          <Tabs
+            value={status ?? 'ALL'}
+            onChange={(_, value) => selectStatus(value === 'ALL' ? undefined : value)}
+            variant='scrollable'
+            className='border-be'
+          >
             <Tab
               value='ALL'
               label={
                 <div className='flex items-center gap-2'>
                   All
-                  <Chip size='small' variant='tonal' label={counts.data ? Object.values(counts.data).reduce((a, b) => a + b, 0) : '…'} />
+                  <Chip
+                    size='small'
+                    variant='tonal'
+                    label={counts.data ? Object.values(counts.data).reduce((a, b) => a + b, 0) : '…'}
+                  />
                 </div>
               }
             />
@@ -205,7 +261,13 @@ const LeadList = () => {
             onChange={e => setSearch(e.target.value)}
             slotProps={{ input: { startAdornment: <i className='bx-search mie-2 text-textDisabled' /> } }}
           />
-          <CustomTextField select className='min-is-[150px]' value={source} onChange={e => setSource(e.target.value as LeadSource | '')} slotProps={{ select: { displayEmpty: true } }}>
+          <CustomTextField
+            select
+            className='min-is-[150px]'
+            value={source}
+            onChange={e => setSource(e.target.value as LeadSource | '')}
+            slotProps={{ select: { displayEmpty: true } }}
+          >
             <MenuItem value=''>All sources</MenuItem>
             {(Object.keys(SOURCE_META) as LeadSource[]).map(s => (
               <MenuItem key={s} value={s}>
@@ -214,7 +276,13 @@ const LeadList = () => {
             ))}
           </CustomTextField>
           {isAdmin && (
-            <CustomTextField select className='min-is-[170px]' value={ownerId} onChange={e => setOwnerId(e.target.value)} slotProps={{ select: { displayEmpty: true } }}>
+            <CustomTextField
+              select
+              className='min-is-[170px]'
+              value={ownerId}
+              onChange={e => setOwnerId(e.target.value)}
+              slotProps={{ select: { displayEmpty: true } }}
+            >
               <MenuItem value=''>All owners</MenuItem>
               {(owners.data ?? []).map(owner => (
                 <MenuItem key={owner.id} value={owner.id}>
@@ -223,8 +291,29 @@ const LeadList = () => {
               ))}
             </CustomTextField>
           )}
-          <CustomTextField type='date' label='From' value={from} onChange={e => setFrom(e.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
-          <CustomTextField type='date' label='To' value={to} onChange={e => setTo(e.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
+          <CustomTextField
+            type='date'
+            label='From'
+            value={from}
+            onChange={e => setFrom(e.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }}
+          />
+          <CustomTextField
+            type='date'
+            label='To'
+            value={to}
+            onChange={e => setTo(e.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }}
+          />
+          {openOnly && !status && (
+            <Chip
+              color='info'
+              variant='tonal'
+              label='Open pipeline'
+              onDelete={() => setOpenOnly(false)}
+              className='self-center'
+            />
+          )}
           {hasFilters && (
             <Button variant='text' color='secondary' onClick={clearFilters}>
               Clear
@@ -290,9 +379,13 @@ const LeadList = () => {
                       <td colSpan={8} className='text-center plb-12'>
                         <div className='flex flex-col items-center gap-2'>
                           <i className='bx-user-plus text-5xl text-textDisabled' />
-                          <Typography variant='h6'>{hasFilters || status ? 'No leads match these filters' : 'No leads yet'}</Typography>
+                          <Typography variant='h6'>
+                            {hasFilters || status ? 'No leads match these filters' : 'No leads yet'}
+                          </Typography>
                           <Typography color='text.secondary'>
-                            {hasFilters || status ? 'Try clearing the filters.' : 'Website form submissions land here automatically, or add one by hand.'}
+                            {hasFilters || status
+                              ? 'Try clearing the filters.'
+                              : 'Website form submissions land here automatically, or add one by hand.'}
                           </Typography>
                           {!hasFilters && !status && (
                             <Button variant='tonal' onClick={openCreate} className='mbs-2'>
@@ -369,7 +462,11 @@ const LeadList = () => {
                         <Typography title={formatDate(lead.createdAt)}>{timeAgo(lead.createdAt)}</Typography>
                       </td>
                       <td className='text-end' onClick={e => e.stopPropagation()}>
-                        <OptionMenu iconButtonProps={{ size: 'small' }} iconClassName='text-textSecondary' options={rowActions(lead)} />
+                        <OptionMenu
+                          iconButtonProps={{ size: 'small' }}
+                          iconClassName='text-textSecondary'
+                          options={rowActions(lead)}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -412,7 +509,11 @@ const LeadList = () => {
         onClose={() => setDrawerOpen(false)}
         onCreated={lead => router.push(`/leads/${lead.id}`)}
       />
-      <StatusChangeDialog lead={statusTarget?.lead ?? null} target={statusTarget?.target ?? null} onClose={() => setStatusTarget(null)} />
+      <StatusChangeDialog
+        lead={statusTarget?.lead ?? null}
+        target={statusTarget?.target ?? null}
+        onClose={() => setStatusTarget(null)}
+      />
       <ConvertLeadDialog lead={converting} onClose={() => setConverting(null)} />
     </div>
   )

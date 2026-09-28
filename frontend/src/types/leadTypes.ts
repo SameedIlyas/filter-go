@@ -65,6 +65,9 @@ export type LeadFilters = {
   page?: number
   limit?: number
   status?: LeadStatus
+
+  /** Open pipeline only (NEW..PROPOSAL). The API ignores it when `status` is also sent. */
+  open?: 'true'
   source?: LeadSource
   ownerId?: string
   q?: string
@@ -98,8 +101,9 @@ export type UpdateLeadInput = {
 
 export type SurveyInput = {
   address: string
-  units: Array<{ name: string; qty: string; estMinutes?: number; notes?: string }>
+  units: SurveyUnit[]
   accessNotes?: string
+  photoFileIds?: string[]
 }
 
 export type ConvertLeadInput = {

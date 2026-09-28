@@ -35,15 +35,18 @@ export const leadListQueryOptions = (filters: LeadFilters) =>
     queryFn: async ({ signal }): Promise<LeadList> => {
       const { data, meta } = await bff<{ leads: Lead[] }>('leads', { query: filters, signal })
 
-      return { leads: data.leads, meta: meta ?? { page: 1, limit: data.leads.length, total: data.leads.length, totalPages: 1 } }
+      return {
+        leads: data.leads,
+        meta: meta ?? { page: 1, limit: data.leads.length, total: data.leads.length, totalPages: 1 }
+      }
     },
     placeholderData: keepPreviousData
   })
 
 export const useLeadsQuery = (filters: LeadFilters) => useQuery(leadListQueryOptions(filters))
 
-/** Totals per status, for the stat cards and tab badges. One tiny request per status. */
-export const useLeadStatusCounts = (filters: Omit<LeadFilters, 'status' | 'page' | 'limit'>) =>
+/** Totals per status, for the stat cards and tab badges. One tiny request per status (so `open` would be meaningless here). */
+export const useLeadStatusCounts = (filters: Omit<LeadFilters, 'status' | 'open' | 'page' | 'limit'>) =>
   useQuery({
     queryKey: queryKeys.leads.counts(filters),
     queryFn: async ({ signal }) => {
@@ -69,7 +72,10 @@ export const useLeadActivities = (id: string, limit: number) =>
   useQuery({
     queryKey: queryKeys.leads.activities(id, limit),
     queryFn: async ({ signal }) => {
-      const { data, meta } = await bff<{ activities: LeadActivity[] }>(`leads/${id}/activities`, { query: { limit }, signal })
+      const { data, meta } = await bff<{ activities: LeadActivity[] }>(`leads/${id}/activities`, {
+        query: { limit },
+        signal
+      })
 
       return { activities: data.activities, total: meta?.total ?? data.activities.length }
     },
@@ -109,7 +115,8 @@ export const useCreateLead = () => {
   const invalidate = useLeadInvalidation()
 
   return useMutation({
-    mutationFn: async (input: CreateLeadInput) => (await bff<{ lead: Lead }>('leads', { method: 'POST', body: input })).data.lead,
+    mutationFn: async (input: CreateLeadInput) =>
+      (await bff<{ lead: Lead }>('leads', { method: 'POST', body: input })).data.lead,
     onSuccess: () => invalidate()
   })
 }
@@ -129,8 +136,12 @@ export const useChangeLeadStatus = () => {
 
   return useMutation({
     mutationFn: async ({ id, status, lostReason }: { id: string; status: LeadStatus; lostReason?: string }) =>
-      (await bff<{ lead: Lead }>(`leads/${id}/status`, { method: 'POST', body: { status, ...(lostReason ? { lostReason } : {}) } }))
-        .data.lead,
+      (
+        await bff<{ lead: Lead }>(`leads/${id}/status`, {
+          method: 'POST',
+          body: { status, ...(lostReason ? { lostReason } : {}) }
+        })
+      ).data.lead,
     onSuccess: lead => invalidate(lead.id)
   })
 }
@@ -140,7 +151,8 @@ export const useAddLeadActivity = (id: string) => {
 
   return useMutation({
     mutationFn: async (input: { type: LeadActivityType; body: string }) =>
-      (await bff<{ activity: LeadActivity; lead: Lead }>(`leads/${id}/activities`, { method: 'POST', body: input })).data,
+      (await bff<{ activity: LeadActivity; lead: Lead }>(`leads/${id}/activities`, { method: 'POST', body: input }))
+        .data,
     onSuccess: () => invalidate(id)
   })
 }
@@ -151,10 +163,13 @@ export const useSaveSurvey = (leadId: string) => {
   return useMutation({
     mutationFn: async ({ surveyId, input }: { surveyId?: string; input: SurveyInput }) =>
       (
-        await bff<{ survey: LeadSurvey }>(surveyId ? `leads/${leadId}/surveys/${surveyId}` : `leads/${leadId}/surveys`, {
-          method: surveyId ? 'PUT' : 'POST',
-          body: input
-        })
+        await bff<{ survey: LeadSurvey }>(
+          surveyId ? `leads/${leadId}/surveys/${surveyId}` : `leads/${leadId}/surveys`,
+          {
+            method: surveyId ? 'PUT' : 'POST',
+            body: input
+          }
+        )
       ).data.survey,
     onSuccess: () => invalidate(leadId)
   })

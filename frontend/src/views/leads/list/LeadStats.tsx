@@ -15,10 +15,14 @@ import { STATUS_META } from '../shared'
 type Props = {
   counts: Record<LeadStatus, number> | undefined
   active?: LeadStatus
+
+  /** The open-pipeline filter is on. */
+  openOnly?: boolean
   onSelect: (status?: LeadStatus) => void
+  onSelectOpen: () => void
 }
 
-const LeadStats = ({ counts, active, onSelect }: Props) => {
+const LeadStats = ({ counts, active, openOnly, onSelect, onSelectOpen }: Props) => {
   const total = counts ? Object.values(counts).reduce((sum, n) => sum + n, 0) : 0
   const open = counts ? counts.NEW + counts.CONTACTED + counts.QUALIFIED + counts.PROPOSAL : 0
   const closed = counts ? counts.WON + counts.LOST : 0
@@ -26,9 +30,30 @@ const LeadStats = ({ counts, active, onSelect }: Props) => {
 
   const tiles = [
     { key: 'all', label: 'Total leads', value: total, icon: 'bx-group', color: 'primary' as const, status: undefined },
-    { key: 'open', label: 'Open pipeline', value: open, icon: 'bx-trending-up', color: 'info' as const, status: undefined },
-    { key: 'won', label: 'Won', value: counts?.WON ?? 0, icon: 'bx-trophy', color: 'success' as const, status: 'WON' as const },
-    { key: 'rate', label: 'Win rate', value: `${winRate}%`, icon: 'bx-pie-chart-alt', color: 'warning' as const, status: undefined }
+    {
+      key: 'open',
+      label: 'Open pipeline',
+      value: open,
+      icon: 'bx-trending-up',
+      color: 'info' as const,
+      status: undefined
+    },
+    {
+      key: 'won',
+      label: 'Won',
+      value: counts?.WON ?? 0,
+      icon: 'bx-trophy',
+      color: 'success' as const,
+      status: 'WON' as const
+    },
+    {
+      key: 'rate',
+      label: 'Win rate',
+      value: `${winRate}%`,
+      icon: 'bx-pie-chart-alt',
+      color: 'warning' as const,
+      status: undefined
+    }
   ]
 
   return (
@@ -37,8 +62,12 @@ const LeadStats = ({ counts, active, onSelect }: Props) => {
         <Card
           key={tile.key}
           className='cursor-pointer'
-          onClick={() => onSelect(tile.key === 'won' ? 'WON' : undefined)}
-          sx={tile.status && active === tile.status ? { outline: theme => `2px solid ${theme.palette.success.main}` } : {}}
+          onClick={() => (tile.key === 'open' ? onSelectOpen() : onSelect(tile.key === 'won' ? 'WON' : undefined))}
+          sx={
+            (tile.status && active === tile.status) || (tile.key === 'open' && openOnly && !active)
+              ? { outline: theme => `2px solid ${theme.palette[tile.color].main}` }
+              : {}
+          }
         >
           <CardContent className='flex items-start justify-between gap-2'>
             <div className='flex flex-col gap-1'>

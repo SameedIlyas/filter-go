@@ -40,7 +40,16 @@ import SurveysCard from './SurveysCard'
 import LeadFormDrawer from '../LeadFormDrawer'
 import StatusChangeDialog from '../StatusChangeDialog'
 import ConvertLeadDialog from '../ConvertLeadDialog'
-import { CONVERTIBLE, NEXT_STATUSES, PIPELINE, SOURCE_META, STATUS_META, StatusChip, formatDate, formatDateTime } from '../shared'
+import {
+  CONVERTIBLE,
+  NEXT_STATUSES,
+  PIPELINE,
+  SOURCE_META,
+  STATUS_META,
+  StatusChip,
+  formatDate,
+  formatDateTime
+} from '../shared'
 
 const InfoRow = ({ icon, label, children }: { icon: string; label: string; children: ReactNode }) => (
   <div className='flex items-start gap-3'>
@@ -106,7 +115,13 @@ const LeadDetail = ({ id }: { id: string }) => {
   return (
     <div className='flex flex-col gap-6'>
       <div className='flex items-center gap-2'>
-        <Button component={Link} href='/leads' variant='text' color='secondary' startIcon={<i className='bx-arrow-back' />}>
+        <Button
+          component={Link}
+          href='/leads'
+          variant='text'
+          color='secondary'
+          startIcon={<i className='bx-arrow-back' />}
+        >
           All leads
         </Button>
       </div>
@@ -115,7 +130,13 @@ const LeadDetail = ({ id }: { id: string }) => {
         <CardContent className='flex flex-col gap-6'>
           <div className='flex flex-wrap items-start justify-between gap-4'>
             <div className='flex items-center gap-4'>
-              <CustomAvatar skin='light' color={STATUS_META[lead.status].color} size={56} variant='rounded' className='text-xl'>
+              <CustomAvatar
+                skin='light'
+                color={STATUS_META[lead.status].color}
+                size={56}
+                variant='rounded'
+                className='text-xl'
+              >
                 {getInitials(lead.companyName)}
               </CustomAvatar>
               <div className='flex flex-col gap-1'>
@@ -130,7 +151,12 @@ const LeadDetail = ({ id }: { id: string }) => {
             </div>
             <div className='flex flex-wrap items-center gap-3'>
               {!isWon && (
-                <Button variant='tonal' color='secondary' startIcon={<i className='bx-edit' />} onClick={() => setEditOpen(true)}>
+                <Button
+                  variant='tonal'
+                  color='secondary'
+                  startIcon={<i className='bx-edit' />}
+                  onClick={() => setEditOpen(true)}
+                >
                   Edit
                 </Button>
               )}
@@ -154,14 +180,23 @@ const LeadDetail = ({ id }: { id: string }) => {
                         }}
                       >
                         <i className={STATUS_META[target].icon} />
-                        {target === 'LOST' ? 'Mark as lost' : target === 'NEW' ? 'Reopen lead' : STATUS_META[target].label}
+                        {target === 'LOST'
+                          ? 'Mark as lost'
+                          : target === 'NEW'
+                            ? 'Reopen lead'
+                            : STATUS_META[target].label}
                       </MenuItem>
                     ))}
                   </Menu>
                 </>
               )}
               {canConvert && (
-                <Button variant='contained' color='success' startIcon={<i className='bx-transfer-alt' />} onClick={() => setConvertOpen(true)}>
+                <Button
+                  variant='contained'
+                  color='success'
+                  startIcon={<i className='bx-transfer-alt' />}
+                  onClick={() => setConvertOpen(true)}
+                >
                   Convert to contract
                 </Button>
               )}
@@ -185,8 +220,11 @@ const LeadDetail = ({ id }: { id: string }) => {
 
           {conversion && (
             <Alert severity='success' variant='outlined' icon={<i className='bx-trophy' />}>
-              Converted to a draft contract <Chip size='small' variant='tonal' color='success' label={conversion.contractId.slice(0, 8)} className='mis-1' />
-              . Continue in Contracts to set rates and send it for signature.
+              Converted to a contract.{' '}
+              <Link href={`/contracts/${conversion.contractId}`} className='text-primary font-medium'>
+                Open the contract
+              </Link>{' '}
+              to review its rates, coverage and signature status.
             </Alert>
           )}
           {!isAdmin && CONVERTIBLE.includes(lead.status) && (
@@ -223,7 +261,9 @@ const LeadDetail = ({ id }: { id: string }) => {
                 <Typography color={lead.address ? 'text.primary' : 'text.disabled'}>{lead.address ?? '—'}</Typography>
               </InfoRow>
               <InfoRow icon='bx-wrench' label='Service interest'>
-                <Typography color={lead.serviceInterest ? 'text.primary' : 'text.disabled'}>{lead.serviceInterest ?? '—'}</Typography>
+                <Typography color={lead.serviceInterest ? 'text.primary' : 'text.disabled'}>
+                  {lead.serviceInterest ?? '—'}
+                </Typography>
               </InfoRow>
               <Divider />
               <InfoRow icon='bx-user-check' label='Owner'>
@@ -241,7 +281,15 @@ const LeadDetail = ({ id }: { id: string }) => {
               <InfoRow icon={SOURCE_META[lead.source].icon} label='Source'>
                 <Typography color='text.primary'>{SOURCE_META[lead.source].label}</Typography>
                 {lead.sourceUrl && (
-                  <Typography variant='body2' component='a' href={lead.sourceUrl} target='_blank' rel='noreferrer' color='primary.main' className='break-all'>
+                  <Typography
+                    variant='body2'
+                    component='a'
+                    href={lead.sourceUrl}
+                    target='_blank'
+                    rel='noreferrer'
+                    color='primary.main'
+                    className='break-all'
+                  >
                     {lead.sourceUrl}
                   </Typography>
                 )}
@@ -280,8 +328,16 @@ const LeadDetail = ({ id }: { id: string }) => {
       </div>
 
       <LeadFormDrawer open={editOpen} lead={lead} onClose={() => setEditOpen(false)} />
-      <StatusChangeDialog lead={statusTarget ? lead : null} target={statusTarget} onClose={() => setStatusTarget(null)} />
-      <ConvertLeadDialog lead={convertOpen ? lead : null} surveyCount={surveys.length} onClose={() => setConvertOpen(false)} />
+      <StatusChangeDialog
+        lead={statusTarget ? lead : null}
+        target={statusTarget}
+        onClose={() => setStatusTarget(null)}
+      />
+      <ConvertLeadDialog
+        lead={convertOpen ? lead : null}
+        surveyCount={surveys.length}
+        onClose={() => setConvertOpen(false)}
+      />
     </div>
   )
 }
