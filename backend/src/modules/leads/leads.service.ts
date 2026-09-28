@@ -12,7 +12,7 @@ import { findOpenDuplicate, lockContactKeys, normalizePhone } from './leads.dedu
 import { notifyLeadAssigned } from './leads.notifications.js'
 import { isEligibleOwner } from './leads.owner.js'
 import type { ActivityBody, CreateBody, ListQuery, PatchBody, StatusBody } from './leads.schemas.js'
-import { assertStatusTransition } from './leads.status.js'
+import { assertStatusTransition, OPEN_STATUSES } from './leads.status.js'
 
 const CONTACT_ACTIVITIES: LeadActivityType[] = ['CALL', 'EMAIL', 'SITE_VISIT']
 const DETAIL_ACTIVITY_LIMIT = 50
@@ -45,6 +45,13 @@ const searchFilter = (q: string): Prisma.LeadWhereInput => ({
   ]
 })
 
+/** An explicit status wins over `open`, so `?status=WON&open=true` lists WON leads. */
+const statusFilter = (query: ListQuery): Prisma.LeadWhereInput => {
+  if (query.status) return { status: query.status }
+
+  return query.open ? { status: { in: OPEN_STATUSES } } : {}
+}
+
 export const listLeads = async (ctx: AppContext, actor: Actor, query: ListQuery) => {
   const createdAt = await createdRange(ctx, actor.orgId, query)
 
@@ -52,7 +59,7 @@ export const listLeads = async (ctx: AppContext, actor: Actor, query: ListQuery)
     AND: [
       leadScope(actor),
       {
-        ...(query.status ? { status: query.status } : {}),
+        ...statusFilter(query),
         ...(query.source ? { source: query.source } : {}),
         ...(query.ownerId ? { ownerId: query.ownerId } : {}),
         ...(createdAt ? { createdAt } : {})

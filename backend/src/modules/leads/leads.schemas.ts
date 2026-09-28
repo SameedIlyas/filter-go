@@ -100,6 +100,11 @@ export const listQuery = z
   .strictObject({
     ...pageQueryShape,
     status: z.enum(LEAD_STATUSES).optional(),
+    // Open pipeline only (NEW..PROPOSAL). An explicit `status` is narrower and wins.
+    open: z
+      .enum(['true', 'false'])
+      .transform(value => value === 'true')
+      .optional(),
     source: z.enum(ALL_SOURCES).optional(),
     ownerId: uuid.optional(),
     q: z.string().trim().min(1).max(100).optional(),

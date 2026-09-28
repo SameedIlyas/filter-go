@@ -130,6 +130,8 @@ export interface ListLeadsQuery {
   page?: number
   limit?: number
   status?: LeadStatus
+  /** 'true': open pipeline only (NEW, CONTACTED, QUALIFIED, PROPOSAL). Ignored when `status` is also sent. */
+  open?: 'true' | 'false'
   source?: LeadSource
   ownerId?: string
   /** Case-insensitive match on company, contact name or email. */

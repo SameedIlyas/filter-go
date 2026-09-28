@@ -137,7 +137,7 @@ Shared helper already written: `createContractDraftRecord` (`src/modules/contrac
 | GET | `/sites` | site scope (`siteScope`) | `clientId`, `q`, `active`. |
 | POST | `/clients/:clientId/sites` | ADMIN | `{ name, address, lat?, lng?, timezone?, accessNotes?, contactName?, contactPhone? }`. `lat` and `lng` both or neither; `timezone` valid IANA. |
 | GET, PATCH | `/sites/:id` | read: site scope; write: ADMIN | |
-| GET | `/contracts` | ADMIN all; SUPERVISOR: contracts with a line or coverage at one of their sites; CLIENT_USER: 403 | `status`, `clientId`, `q` (number), `latestOnly=true` (highest version per number), paging. |
+| GET | `/contracts` | ADMIN all; SUPERVISOR: contracts with a line or coverage at one of their sites; CLIENT_USER: 403 | `status`, `clientId`, `q` (number or client legal name), `latestOnly=true` (highest version per number), paging. |
 | POST | `/contracts` | ADMIN | Creates a DRAFT v1 with lines and coverage. |
 | GET | `/contracts/:id` | as list | Detail + `lines`, `coverage`, and `versions: [{ id, version, status }]` (whole chain). Rates redacted per 2.3. |
 | PATCH | `/contracts/:id` | ADMIN | Header fields (`startDate`, `endDate`, `autoRenew`, `billingType`, `billingCycle`). **DRAFT only**, else `409 CONTRACT_NOT_EDITABLE`. |
@@ -395,7 +395,7 @@ The endpoint needs, on day one:
 
 | Method | Path | Who | Notes |
 |---|---|---|---|
-| GET | `/leads` | ADMIN all; SUPERVISOR: leads they own | `status`, `source`, `ownerId`, `q` (company/contact/email), `from`/`to` (created), paging. |
+| GET | `/leads` | ADMIN all; SUPERVISOR: leads they own | `status`, `open=true\|false` (true: open pipeline only, NEW/CONTACTED/QUALIFIED/PROPOSAL; an explicit `status` wins over it), `source`, `ownerId`, `q` (company/contact/email), `from`/`to` (created), paging. |
 | POST | `/leads` | ADMIN, SUPERVISOR | Manual lead (`source` PHONE/REFERRAL/FIELD/MANUAL). Same dedupe rules but returns `409 DUPLICATE` with `details.context.leadId` instead of merging. |
 | GET | `/leads/:id` | as list | Lead + latest activities + surveys + conversion links. |
 | PATCH | `/leads/:id` | ADMIN, owner | `companyName`, `contactName`, `email`, `phone`, `address`, `serviceInterest`, `ownerId` (active ADMIN/SUPERVISOR; ADMIN only may reassign; new owner notified `lead.assigned`). |

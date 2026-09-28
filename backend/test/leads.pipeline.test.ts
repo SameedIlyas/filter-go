@@ -136,6 +136,22 @@ describe('GET /v1/leads', () => {
     expect(await ids({ q: 'nothing-matches' })).toEqual([])
   })
 
+  it('open=true lists the open pipeline only; an explicit status wins over it', async () => {
+    const open = await Promise.all((['NEW', 'CONTACTED', 'QUALIFIED', 'PROPOSAL'] as const).map(status => makeLead(t, orgId, { status })))
+
+    await makeLead(t, orgId, { status: 'WON' })
+    const lost = await makeLead(t, orgId, { status: 'LOST' })
+
+    expect((await ids({ open: 'true' })).sort()).toEqual(open.map(lead => lead.id).sort())
+    expect(await ids({ open: 'false' })).toHaveLength(6)
+    expect(await ids({ open: 'true', status: 'LOST' })).toEqual([lost.id])
+
+    const bad = await api.get('/v1/leads', { token: adminToken, query: { open: 'yes' } })
+
+    expect(bad.statusCode).toBe(400)
+    expect(body(bad).error?.details?.issues?.[0]?.field).toBe('open')
+  })
+
   it('a supervisor cannot widen their view with the ownerId filter', async () => {
     await makeLead(t, orgId, { ownerId: sup2.id })
 

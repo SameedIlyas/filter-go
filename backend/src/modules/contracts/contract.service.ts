@@ -49,7 +49,14 @@ export const listContracts = async (
       await contractScope(ctx, actor),
       query.status ? { status: query.status } : {},
       query.clientId ? { clientId: query.clientId } : {},
-      query.q ? { contractNumber: { contains: query.q, mode: 'insensitive' } } : {},
+      query.q
+        ? {
+            OR: [
+              { contractNumber: { contains: query.q, mode: 'insensitive' } },
+              { client: { legalName: { contains: query.q, mode: 'insensitive' } } }
+            ]
+          }
+        : {},
       latest ? { id: { in: latest } } : {}
     ]
   }

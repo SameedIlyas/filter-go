@@ -321,6 +321,20 @@ describe('GET /contracts filters', () => {
     expect((await list({ clientId: 'nope' })).statusCode).toBe(400)
   })
 
+  it('q matches the client legal name as well as the contract number', async () => {
+    const orgId = (await ensureOrg(t)).id
+    const acme = await makeClient(t, { orgId, legalName: 'Acme Filtration Inc' })
+    const match = await makeContract(t, { orgId, client: acme, status: 'ACTIVE', contractNumber: 'C-XYZ' })
+
+    await contractIn(t, w, 'DRAFT', { contractNumber: 'C-ACM' })
+
+    const ids = async (q: string) =>
+      ((body(await w.api.get('/v1/contracts', { token: w.admin.token, query: { q } })).data?.contracts ?? []) as Array<{ id: string }>).map(row => row.id)
+
+    expect(await ids('filtration')).toEqual([match.contract.id])
+    expect(await ids('acm')).toHaveLength(2)
+  })
+
   it('latestOnly returns the highest version per number (one row per contract number)', async () => {
     const orgId = (await ensureOrg(t)).id
     const client = await t.prisma.client.findFirstOrThrow({ where: { id: w.clientId } })
