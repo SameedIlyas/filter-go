@@ -84,7 +84,7 @@ Every state change and every override writes an audit row via `recordAudit(tx, a
 `notify(ctx, { orgId, userIds, type, title, body, data, email? }, tx?)` (`src/modules/notifications/notify.ts`) writes in-app notifications and optionally emails. Only active users of the organization are notified. Event types are listed per module. `email: true` only for things that cannot wait (new lead, shift assigned after publish, no-show).
 
 ### 2.10 Files
-File bytes are handled by the Files module (`POST /v1/files` -> `FileObject`). Other modules store only file **ids** and must call `assertFilesInOrg(tx, orgId, ids, field)` before saving one.
+File bytes are handled by the Files module (`POST /v1/files` -> `FileObject`). Other modules store only file **ids** and must call `assertFilesInOrg(tx, orgId, ids, field)` before saving one. The daily `files.sweep-orphans` job deletes files older than 7 days that nothing references (`files.sweep.ts` lists every file-id column; **add new ones there**).
 
 ### 2.11 Concurrency
 Anything that can be double-submitted (approve, publish, assign, clock-in, invoice run, convert lead) must be safe: use conditional updates (`updateMany({ where: { id, status: <expected> } })` and check `count`), unique constraints, or `SELECT ... FOR UPDATE`. Each module tests its two most dangerous races with `Promise.all`.
