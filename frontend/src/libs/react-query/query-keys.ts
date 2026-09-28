@@ -33,5 +33,23 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.root, 'leads', 'one', id, 'detail'] as const,
     activities: (id: string, limit: number) => [...queryKeys.root, 'leads', 'one', id, 'activities', limit] as const,
     owners: () => [...queryKeys.root, 'leads', 'owners'] as const
+  },
+
+  /** `/api/backend/{contracts,clients,sites,services,tax-rates}` — see `src/libs/api/queries/contracts.ts`. */
+  contracts: {
+    all: () => [...queryKeys.root, 'contracts'] as const,
+    lists: () => [...queryKeys.root, 'contracts', 'list'] as const,
+    list: (filters: object) => [...queryKeys.root, 'contracts', 'list', filters] as const,
+    allCounts: () => [...queryKeys.root, 'contracts', 'counts'] as const,
+    counts: (filters: object) => [...queryKeys.root, 'contracts', 'counts', filters] as const,
+    detail: (id: string) => [...queryKeys.root, 'contracts', 'one', id] as const,
+    allClients: () => [...queryKeys.root, 'contracts', 'clients'] as const,
+    clients: (params: object) => [...queryKeys.root, 'contracts', 'clients', 'list', params] as const,
+    client: (id: string) => [...queryKeys.root, 'contracts', 'clients', 'one', id] as const,
+    clientPage: (filters: object) => [...queryKeys.root, 'contracts', 'clients', 'page', filters] as const,
+    audit: (entity: string, id: string) => [...queryKeys.root, 'contracts', 'audit', entity, id] as const,
+    sites: (clientId: string) => [...queryKeys.root, 'contracts', 'sites', clientId] as const,
+    services: () => [...queryKeys.root, 'contracts', 'services'] as const,
+    taxRates: () => [...queryKeys.root, 'contracts', 'tax-rates'] as const
   }
 } as const

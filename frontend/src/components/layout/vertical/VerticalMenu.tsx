@@ -79,6 +79,15 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
           <MenuItem href='/leads' icon={<i className='bx-target-lock' />} exactMatch={false} activeUrl='/leads'>
             Leads
           </MenuItem>
+          <MenuItem href='/clients' icon={<i className='bx-buildings' />} exactMatch={false} activeUrl='/clients'>
+            Clients & Sites
+          </MenuItem>
+          <MenuItem href='/contracts' icon={<i className='bx-file' />} exactMatch={false} activeUrl='/contracts'>
+            Contracts
+          </MenuItem>
+          <MenuItem href='/settings/catalog' icon={<i className='bx-purchase-tag' />} exactMatch={false} activeUrl='/settings/catalog'>
+            Services & Tax
+          </MenuItem>
         </MenuSection>
         <SubMenu
           label='dashboards'
