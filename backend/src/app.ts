@@ -151,11 +151,13 @@ export const buildApp = async ({ config, prisma, mailer, hasher }: AppDependenci
   // constantly (e.g. logout), so treat it as `{}`. Malformed JSON is still a clean 400.
   app.removeContentTypeParser('application/json')
   app.addContentTypeParser('application/json', { parseAs: 'string', bodyLimit: BODY_LIMIT_BYTES }, (_req, body, done) => {
-    const text = String(body).trim()
+    const raw = String(body)
+    const text = raw.trim()
+
+    // Signatures (Stripe) are computed over the exact bytes sent, so keep the untrimmed body
+    _req.rawBody = raw
 
     if (text === '') return done(null, {})
-
-    _req.rawBody = text
 
     try {
       done(null, JSON.parse(text))
