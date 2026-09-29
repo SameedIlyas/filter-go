@@ -12,7 +12,7 @@ const ALLOWED = [
   new RegExp(`^auth/(me|logout-all|change-password|sessions(/${UUID})?)$`),
   new RegExp(`^admin/users(/invite|/${UUID}(/revoke-sessions)?)?$`),
   new RegExp(`^leads(/${UUID}(/(status|activities|convert|surveys(/${UUID})?))?)?$`),
-  /^users$/,
+  new RegExp(`^users(/${UUID}(/(availability|sites|compliance|documents(/${UUID})?))?)?$`),
   /^org$/,
   new RegExp(`^services(/${UUID})?$`),
   /^tax-rates(\/[A-Za-z0-9_.-]{1,32})?$/,

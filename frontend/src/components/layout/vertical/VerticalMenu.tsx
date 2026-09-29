@@ -89,6 +89,11 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
             Services & Tax
           </MenuItem>
         </MenuSection>
+        <MenuSection label='Workforce'>
+          <MenuItem href='/users' icon={<i className='bx-user' />} exactMatch={false} activeUrl='/users'>
+            Users
+          </MenuItem>
+        </MenuSection>
         <SubMenu
           label='dashboards'
           icon={<i className='bx-home-smile' />}

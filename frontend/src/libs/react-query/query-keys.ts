@@ -13,13 +13,20 @@
 export const queryKeys = {
   root: ['coolcraft'] as const,
 
-  /** `GET /apps/user-list` — reference feature, see `src/libs/api/queries/users.ts`. */
+  /** `/api/backend/{users,admin/users}/*` — see `src/libs/api/queries/users.ts`. */
   users: {
     all: () => [...queryKeys.root, 'users'] as const,
     lists: () => [...queryKeys.root, 'users', 'list'] as const,
-    list: (params: { role?: string; status?: string } = {}) => [...queryKeys.root, 'users', 'list', params] as const,
-    details: () => [...queryKeys.root, 'users', 'detail'] as const,
-    detail: (userId: number) => [...queryKeys.root, 'users', 'detail', userId] as const
+    list: (filters: object = {}) => [...queryKeys.root, 'users', 'list', filters] as const,
+    allCounts: () => [...queryKeys.root, 'users', 'counts'] as const,
+    counts: (filters: object) => [...queryKeys.root, 'users', 'counts', filters] as const,
+    one: (id: string) => [...queryKeys.root, 'users', 'one', id] as const,
+    detail: (id: string) => [...queryKeys.root, 'users', 'one', id, 'detail'] as const,
+    availability: (id: string) => [...queryKeys.root, 'users', 'one', id, 'availability'] as const,
+    sites: (id: string) => [...queryKeys.root, 'users', 'one', id, 'sites'] as const,
+    documents: (id: string) => [...queryKeys.root, 'users', 'one', id, 'documents'] as const,
+    compliance: (id: string) => [...queryKeys.root, 'users', 'one', id, 'compliance'] as const,
+    allSites: () => [...queryKeys.root, 'users', 'site-options'] as const
   },
 
   /** `/api/backend/leads/*` — see `src/libs/api/queries/leads.ts`. */
