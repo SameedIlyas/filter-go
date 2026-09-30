@@ -46,3 +46,8 @@ export const OUTSIDER_VISIBLE_STATUSES: ScheduleStatus[] = ['PUBLISHED', 'LOCKED
 export const MAX_PERIOD_DAYS = 93
 export const MAX_SHIFT_HOURS = 24
 export const MAX_OFFERS_PER_REQUEST = 50
+
+/** Six weeks (a month view padded to whole weeks) plus a day either side for site timezones ahead of or behind UTC. */
+export const BOARD_MAX_DAYS = 45
+/** Rows returned per board request; beyond this the response says `truncated` and the UI asks for narrower filters. */
+export const BOARD_ROW_LIMIT = 2000

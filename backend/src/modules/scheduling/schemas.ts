@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { D } from '../../lib/money.js'
 import { pageQueryShape } from '../../lib/pagination.js'
 import { dateOnlyField, instantField } from '../../lib/time.js'
+import { BOARD_MAX_DAYS } from './constants.js'
 
 const SHIFT_STATUSES = ['OPEN', 'ASSIGNED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'NO_SHOW', 'CANCELLED'] as const
 const SCHEDULE_STATUSES = ['DRAFT', 'PUBLISHED', 'LOCKED', 'CLOSED'] as const
@@ -49,6 +50,31 @@ export const shiftListQuery = z.strictObject({
   isExtra: booleanQuery.optional(),
   unassigned: booleanQuery.optional()
 })
+
+/** "a,b,c" -> ['a', 'b', 'c'], each checked by `item`. Query strings carry lists comma-separated. */
+const csvList = <T extends z.ZodType<unknown, string>>(item: T) =>
+  z
+    .string()
+    .transform(value => value.split(',').map(part => part.trim()).filter(Boolean))
+    .pipe(z.array(item).min(1).max(100))
+
+/** The board: every shift overlapping [from, to), capped at BOARD_MAX_DAYS so one request stays cheap. */
+export const boardQuery = z
+  .strictObject({
+    from: instantField,
+    to: instantField,
+    siteIds: csvList(z.uuid()).optional(),
+    userIds: csvList(z.uuid()).optional(),
+    statuses: csvList(z.enum(SHIFT_STATUSES)).optional(),
+    scheduleId: z.uuid().optional(),
+    unassigned: booleanQuery.optional(),
+    includeDraft: booleanQuery.default(true)
+  })
+  .refine(value => value.to > value.from, { message: '"to" must be after "from".', path: ['to'] })
+  .refine(value => value.to.getTime() - value.from.getTime() <= BOARD_MAX_DAYS * 86_400_000, {
+    message: `The board shows at most ${BOARD_MAX_DAYS} days at a time.`,
+    path: ['to']
+  })
 
 export const myShiftsQuery = z.strictObject({
   ...pageQueryShape,
@@ -119,3 +145,4 @@ export type PatchShiftInput = z.output<typeof patchShiftBody>
 export type AssignInput = z.output<typeof assignBody>
 export type ExtraShiftInput = z.output<typeof extraShiftBody>
 export type CoverageQuery = z.output<typeof coverageQuery>
+export type BoardQuery = z.output<typeof boardQuery>

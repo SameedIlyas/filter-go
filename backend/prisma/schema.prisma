@@ -678,6 +678,8 @@ model Shift {
   @@index([assignedUserId, scheduledStart])
   @@index([siteId, scheduledStart])
   @@index([orgId, status, scheduledStart])
+  /// The board: every shift in an org over a date window, any status.
+  @@index([orgId, scheduledStart])
   @@map("shifts")
 }
 

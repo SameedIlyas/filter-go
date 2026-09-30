@@ -5,9 +5,10 @@ import { parse, uuidParams } from '../../lib/validation.js'
 import { actorFromReq, clientMeta, requireRoles } from '../../plugins/auth.js'
 import { addShift, assignShift, validateAssignment } from './assignment.service.js'
 import { addExtraShift } from './extra-shift.service.js'
+import { boardShifts } from './board.query.js'
 import { createOffers } from './offers.service.js'
 import { presentShift } from './presenters.js'
-import { addShiftBody, assignBody, cancelBody, emptyBody, extraShiftBody, offersBody, patchShiftBody, shiftListQuery, validateAssignmentBody } from './schemas.js'
+import { addShiftBody, assignBody, boardQuery, cancelBody, emptyBody, extraShiftBody, offersBody, patchShiftBody, shiftListQuery, validateAssignmentBody } from './schemas.js'
 import { cancelShift, confirmShift, unassignShift, updateShift } from './shifts.service.js'
 import { listShifts } from './shifts.query.js'
 
@@ -25,7 +26,13 @@ export const shiftRoutes: FastifyPluginAsync = async app => {
     return reply.send(ok({ shifts: items }, meta))
   })
 
-  // Registered before "/shifts/:id/..." so the literal path is unambiguous
+  // Literal paths are registered before "/shifts/:id/..." so they are unambiguous
+  app.get('/shifts/board', { preHandler: staffOnly }, async (req, reply) => {
+    const query = parse(boardQuery, req.query)
+
+    return reply.send(ok(await boardShifts(ctx, actorFromReq(req), query)))
+  })
+
   app.post('/shifts/extra', { preHandler: fieldOnly }, async (req, reply) => {
     const body = parse(extraShiftBody, req.body)
     const shift = await addExtraShift(ctx, actorFromReq(req), body, clientMeta(req))
