@@ -58,5 +58,23 @@ export const queryKeys = {
     sites: (clientId: string) => [...queryKeys.root, 'contracts', 'sites', clientId] as const,
     services: () => [...queryKeys.root, 'contracts', 'services'] as const,
     taxRates: () => [...queryKeys.root, 'contracts', 'tax-rates'] as const
+  },
+
+  /** `/api/backend/{schedules,shifts,shift-offers,me/*}` — see `src/libs/api/queries/scheduling.ts`. */
+  scheduling: {
+    all: () => [...queryKeys.root, 'scheduling'] as const,
+    boards: () => [...queryKeys.root, 'scheduling', 'board'] as const,
+    board: (params: object) => [...queryKeys.root, 'scheduling', 'board', params] as const,
+    scheduleLists: () => [...queryKeys.root, 'scheduling', 'schedules', 'list'] as const,
+    scheduleList: (filters: object) => [...queryKeys.root, 'scheduling', 'schedules', 'list', filters] as const,
+    schedule: (id: string) => [...queryKeys.root, 'scheduling', 'schedules', 'one', id] as const,
+    shifts: () => [...queryKeys.root, 'scheduling', 'shifts'] as const,
+    shift: (id: string) => [...queryKeys.root, 'scheduling', 'shifts', id] as const,
+    staff: () => [...queryKeys.root, 'scheduling', 'staff'] as const,
+    sites: () => [...queryKeys.root, 'scheduling', 'sites'] as const,
+    me: () => [...queryKeys.root, 'scheduling', 'me'] as const,
+    myShifts: (range: object) => [...queryKeys.root, 'scheduling', 'me', 'shifts', range] as const,
+    myOffers: () => [...queryKeys.root, 'scheduling', 'me', 'offers'] as const,
+    mySchedules: () => [...queryKeys.root, 'scheduling', 'me', 'schedules'] as const
   }
 } as const

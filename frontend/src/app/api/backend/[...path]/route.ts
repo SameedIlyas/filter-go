@@ -19,7 +19,11 @@ const ALLOWED = [
   /^audit-events$/,
   new RegExp(`^clients(/${UUID}(/sites)?)?$`),
   new RegExp(`^sites(/${UUID})?$`),
-  new RegExp(`^contracts(/${UUID}(/(lines|coverage|submit|sign|suspend|resume|cancel|new-version))?)?$`)
+  new RegExp(`^contracts(/${UUID}(/(lines|coverage|submit|sign|suspend|resume|cancel|new-version))?)?$`),
+  new RegExp(`^schedules(/generate|/${UUID}(/(publish|unpublish|lock|close|regenerate|shifts))?)?$`),
+  new RegExp(`^shifts(/board|/extra|/${UUID}(/(validate-assignment|assign|unassign|cancel|confirm|offers))?)?$`),
+  new RegExp(`^shift-offers/${UUID}/(accept|decline)$`),
+  /^me\/(shifts|offers)$/
 ]
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'

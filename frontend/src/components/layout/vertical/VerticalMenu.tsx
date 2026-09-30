@@ -16,6 +16,12 @@ import CustomChip from '@core/components/mui/Chip'
 // Hook Imports
 import useVerticalNav from '@menu/hooks/useVerticalNav'
 
+// Context Imports
+import { useSession } from '@/contexts/sessionContext'
+
+// Lib Imports
+import { useMyOffers } from '@/libs/api/queries/scheduling'
+
 // Styled Component Imports
 import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNavExpandIcon'
 
@@ -46,8 +52,16 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
   const theme = useTheme()
 
   const verticalNavOptions = useVerticalNav()
+  const session = useSession()
 
   // Vars
+  const isStaff = session?.role === 'ADMIN' || session?.role === 'SUPERVISOR'
+  const isFieldUser = session?.role === 'FIELD_USER'
+
+  // Pending offers for the "My shifts" badge; only field users have any
+  const { data: offers } = useMyOffers(isFieldUser)
+  const offerCount = offers?.length ?? 0
+
   const { transitionDuration, isBreakpointReached } = verticalNavOptions
 
   const ScrollWrapper = isBreakpointReached ? 'div' : PerfectScrollbar
@@ -85,11 +99,25 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
           <MenuItem href='/contracts' icon={<i className='bx-file' />} exactMatch={false} activeUrl='/contracts'>
             Contracts
           </MenuItem>
+          {isStaff && (
+            <MenuItem href='/schedules' icon={<i className='bx-calendar' />} exactMatch={false} activeUrl='/schedules'>
+              Schedules
+            </MenuItem>
+          )}
           <MenuItem href='/settings/catalog' icon={<i className='bx-purchase-tag' />} exactMatch={false} activeUrl='/settings/catalog'>
             Services & Tax
           </MenuItem>
         </MenuSection>
         <MenuSection label='Workforce'>
+          {isFieldUser && (
+            <MenuItem
+              href='/my-shifts'
+              icon={<i className='bx-calendar-check' />}
+              suffix={offerCount > 0 ? <CustomChip label={offerCount} size='small' color='error' round='true' /> : undefined}
+            >
+              My shifts
+            </MenuItem>
+          )}
           <MenuItem href='/users' icon={<i className='bx-user' />} exactMatch={false} activeUrl='/users'>
             Users
           </MenuItem>
