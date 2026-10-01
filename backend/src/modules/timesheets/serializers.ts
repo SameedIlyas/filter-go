@@ -2,6 +2,7 @@ import type { TimesheetException, WorkLog } from '../../generated/prisma/client.
 import { canSeeBillRate, canSeePayRate } from '../../lib/access.js'
 import type { Actor } from '../../lib/access.js'
 import { money } from '../../lib/money.js'
+import type { ActivityItem } from './activity.js'
 import type { EntryRow } from './entries.js'
 import { haversineMeters, pointOf } from './geo.js'
 
@@ -31,7 +32,10 @@ const shiftSummary = (entry: EntryRow) => ({
   isExtra: entry.shift.isExtra
 })
 
-const siteSummary = (entry: EntryRow) => ({ id: entry.shift.site.id, name: entry.shift.site.name })
+/** Site timezone = `site.timezone ?? organization.timezone` (docs/ARCHITECTURE.md 2.4). Show the entry's times in it. */
+const siteZone = (entry: EntryRow): string => entry.shift.site.timezone ?? entry.shift.site.org.timezone
+
+const siteSummary = (entry: EntryRow) => ({ id: entry.shift.site.id, name: entry.shift.site.name, timezone: siteZone(entry) })
 
 /** Client portal view: finished, approved work only, no worker identity, GPS, exceptions, flags for pay or rates. */
 const serializeClientEntry = (entry: EntryRow) => ({
@@ -103,8 +107,11 @@ export const serializeWorkLog = (log: WorkLog, viewer: Viewer, users: UserNames 
   ...(viewer.role === 'CLIENT_USER' ? {} : { userId: log.userId, user: users.get(log.userId) ?? null })
 })
 
-/** Detail view: the summary plus the GPS points, the site's coordinates and the work logs (clients: no GPS, no coordinates). */
-export const serializeEntryDetail = (entry: EntryRow, viewer: Viewer, workLogs: WorkLog[], users: UserNames) => {
+/**
+ * Detail view: the summary plus the GPS points, the site's coordinates and the work logs (clients: no GPS, no
+ * coordinates). Staff also get the `activity` trail; the key is omitted for everyone else.
+ */
+export const serializeEntryDetail = (entry: EntryRow, viewer: Viewer, workLogs: WorkLog[], users: UserNames, activity?: ActivityItem[]) => {
   const summary = serializeEntry(entry, viewer, users)
   const logs = workLogs.map(log => serializeWorkLog(log, viewer, users))
 
@@ -114,10 +121,11 @@ export const serializeEntryDetail = (entry: EntryRow, viewer: Viewer, workLogs: 
 
   return {
     ...summary,
-    site: { id: site.id, name: site.name, address: site.address, lat: site.lat, lng: site.lng, timezone: site.timezone },
+    site: { id: site.id, name: site.name, address: site.address, lat: site.lat, lng: site.lng, timezone: siteZone(entry) },
     clockIn: clockPoint(entry.clockInAt, entry.clockInLat, entry.clockInLng, site),
     clockOut: clockPoint(entry.clockOutAt, entry.clockOutLat, entry.clockOutLng, site),
-    workLogs: logs
+    workLogs: logs,
+    ...(activity ? { activity } : {})
   }
 }
 

@@ -6,8 +6,11 @@ import { Errors } from '../../lib/errors.js'
 import type { Db } from '../../lib/prisma.js'
 import { CLIENT_VISIBLE } from './state.js'
 
-/** What every entry read needs: the shift and its site, plus the exception rows. */
-export const entryInclude = { shift: { include: { site: true } }, exceptions: { orderBy: { createdAt: 'asc' } } } as const satisfies Prisma.TimesheetEntryInclude
+/** What every entry read needs: the shift and its site (with the org's timezone as the fallback zone), plus the exception rows. */
+export const entryInclude = {
+  shift: { include: { site: { include: { org: { select: { timezone: true } } } } } },
+  exceptions: { orderBy: { createdAt: 'asc' } }
+} as const satisfies Prisma.TimesheetEntryInclude
 
 export type EntryRow = Prisma.TimesheetEntryGetPayload<{ include: typeof entryInclude }>
 

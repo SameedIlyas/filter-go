@@ -79,7 +79,7 @@ describe('rate and field redaction for all four roles', () => {
     }
 
     expect(detail).toMatchObject({ id: entry.id, status: 'APPROVED', billable: true })
-    expect(detail.site).toEqual({ id: w.fixture.site.id, name: w.fixture.site.name })
+    expect(detail.site).toEqual({ id: w.fixture.site.id, name: w.fixture.site.name, timezone: 'America/Chicago' })
   })
 })
 
@@ -205,7 +205,7 @@ describe('GET /v1/timesheets', () => {
     const [row] = body(await get('/v1/timesheets', w.admin.token)).data?.timesheets
 
     expect(row.user).toEqual({ id: w.worker.user.id, name: w.worker.user.name })
-    expect(row.site).toEqual({ id: w.fixture.site.id, name: w.fixture.site.name })
+    expect(row.site).toEqual({ id: w.fixture.site.id, name: w.fixture.site.name, timezone: 'America/Chicago' })
     expect(row.shift).toMatchObject({ scheduleId: w.schedule.id, siteId: w.fixture.site.id, status: 'COMPLETED', isExtra: false })
   })
 })

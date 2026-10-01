@@ -4,6 +4,7 @@ import { assertSiteAccess } from '../../lib/access.js'
 import type { Actor } from '../../lib/access.js'
 import { Errors } from '../../lib/errors.js'
 import { pageArgs, pageMeta } from '../../lib/pagination.js'
+import { loadActivity } from './activity.js'
 import { entryInclude, loadUserNames, readScope } from './entries.js'
 import type { ListQuery, MineQuery, QueueQuery } from './schemas.js'
 import { CLIENT_LOG_KINDS, serializeEntry, serializeEntryDetail, serializeQueueItem } from './serializers.js'
@@ -71,9 +72,13 @@ export const getEntryDetail = async (ctx: AppContext, actor: Actor, id: string) 
     take: MAX_DETAIL_WORK_LOGS
   })
 
-  const users = actor.role === 'CLIENT_USER' ? new Map() : await loadUserNames(ctx.prisma, actor.orgId, [entry.userId, ...workLogs.map(log => log.userId)])
+  const isStaff = actor.role === 'ADMIN' || actor.role === 'SUPERVISOR'
+  const [users, activity] = await Promise.all([
+    actor.role === 'CLIENT_USER' ? new Map() : loadUserNames(ctx.prisma, actor.orgId, [entry.userId, ...workLogs.map(log => log.userId)]),
+    isStaff ? loadActivity(ctx.prisma, actor.orgId, entry) : undefined
+  ])
 
-  return serializeEntryDetail(entry, actor, workLogs, users)
+  return serializeEntryDetail(entry, actor, workLogs, users, activity)
 }
 
 /** GET /timesheets/exceptions: the supervisor's queue. Unresolved only, oldest first. */

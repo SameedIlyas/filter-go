@@ -10,6 +10,7 @@ import { approveBatch, approveEntry, rejectEntry, resolveException } from './app
 import { clockIn, clockOut } from './clocking.js'
 import { correctEntry, resubmitEntry } from './corrections.js'
 import { loadUserNames } from './entries.js'
+import { workedHours } from './hours.query.js'
 import type { EntryRow } from './entries.js'
 import { getEntryDetail, listEntries, listExceptionQueue, listMyEntries } from './queries.js'
 import {
@@ -19,6 +20,7 @@ import {
   clockOutBody,
   correctBody,
   emptyBody,
+  hoursQuery,
   listQuery,
   mineQuery,
   queueQuery,
@@ -97,6 +99,10 @@ export const timesheetRoutes: FastifyPluginAsync = async app => {
     const { items, meta } = await listExceptionQueue(ctx, actorFromReq(req), parse(queueQuery, req.query))
 
     return reply.send(ok({ exceptions: items }, meta))
+  })
+
+  app.get('/timesheets/hours', { preHandler: staff }, async (req, reply) => {
+    return reply.send(ok(await workedHours(ctx, actorFromReq(req), parse(hoursQuery, req.query))))
   })
 
   app.get('/timesheets/:id', { preHandler: requireRoles('ADMIN', 'SUPERVISOR', 'FIELD_USER', 'CLIENT_USER') }, async (req, reply) => {

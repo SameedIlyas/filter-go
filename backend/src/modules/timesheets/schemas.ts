@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { pageQueryShape } from '../../lib/pagination.js'
-import { instantField } from '../../lib/time.js'
+import { dateOnlyField, daysBetween, instantField } from '../../lib/time.js'
 import { latField, lngField } from './geo.js'
 
 const MAX_BREAK_MINUTES = 24 * 60
@@ -71,6 +71,14 @@ export const listQuery = z
   })
   .refine(rangeIsOrdered, rangeIssue)
 
+/** The hours grid spans at most six weeks plus a day, the same reach as the scheduling board. */
+export const HOURS_MAX_DAYS = 45
+
+export const hoursQuery = z
+  .strictObject({ from: dateOnlyField, to: dateOnlyField, siteId: z.uuid().optional(), userId: z.uuid().optional() })
+  .refine(value => value.from <= value.to, { message: '`from` must not be after `to`.', path: ['to'] })
+  .refine(value => daysBetween(value.from, value.to) < HOURS_MAX_DAYS, { message: `Pick at most ${HOURS_MAX_DAYS} days.`, path: ['to'] })
+
 export const queueQuery = z.strictObject({
   ...pageQueryShape,
   type: exceptionType.optional(),
@@ -100,3 +108,4 @@ export type WorkLogBody = z.output<typeof workLogBody>
 export type ListQuery = z.output<typeof listQuery>
 export type MineQuery = z.output<typeof mineQuery>
 export type QueueQuery = z.output<typeof queueQuery>
+export type HoursQuery = z.output<typeof hoursQuery>
