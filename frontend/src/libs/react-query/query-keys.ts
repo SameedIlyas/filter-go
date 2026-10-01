@@ -76,5 +76,21 @@ export const queryKeys = {
     myShifts: (range: object) => [...queryKeys.root, 'scheduling', 'me', 'shifts', range] as const,
     myOffers: () => [...queryKeys.root, 'scheduling', 'me', 'offers'] as const,
     mySchedules: () => [...queryKeys.root, 'scheduling', 'me', 'schedules'] as const
+  },
+
+  /** `/api/backend/{timesheets,timesheet-exceptions,me/timesheets,shifts/:id/(clock-in|work-logs)}` — see `src/libs/api/queries/timesheets.ts`. */
+  timesheets: {
+    all: () => [...queryKeys.root, 'timesheets'] as const,
+    lists: () => [...queryKeys.root, 'timesheets', 'list'] as const,
+    list: (filters: object) => [...queryKeys.root, 'timesheets', 'list', filters] as const,
+    exceptionLists: () => [...queryKeys.root, 'timesheets', 'exceptions'] as const,
+    exceptions: (filters: object) => [...queryKeys.root, 'timesheets', 'exceptions', filters] as const,
+    hoursAll: () => [...queryKeys.root, 'timesheets', 'hours'] as const,
+    hours: (params: object) => [...queryKeys.root, 'timesheets', 'hours', params] as const,
+    detail: (id: string) => [...queryKeys.root, 'timesheets', 'one', id] as const,
+    workLogs: (shiftId: string) => [...queryKeys.root, 'timesheets', 'work-logs', shiftId] as const,
+    me: () => [...queryKeys.root, 'timesheets', 'me'] as const,
+    mine: (filters: object) => [...queryKeys.root, 'timesheets', 'me', 'list', filters] as const,
+    myOpen: () => [...queryKeys.root, 'timesheets', 'me', 'open'] as const
   }
 } as const

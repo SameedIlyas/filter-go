@@ -104,6 +104,11 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
               Schedules
             </MenuItem>
           )}
+          {isStaff && (
+            <MenuItem href='/timesheets' icon={<i className='bx-time-five' />} exactMatch={false} activeUrl='/timesheets'>
+              Timesheets
+            </MenuItem>
+          )}
           <MenuItem href='/settings/catalog' icon={<i className='bx-purchase-tag' />} exactMatch={false} activeUrl='/settings/catalog'>
             Services & Tax
           </MenuItem>
@@ -116,6 +121,11 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
               suffix={offerCount > 0 ? <CustomChip label={offerCount} size='small' color='error' round='true' /> : undefined}
             >
               My shifts
+            </MenuItem>
+          )}
+          {isFieldUser && (
+            <MenuItem href='/my-timesheets' icon={<i className='bx-time-five' />}>
+              My timesheets
             </MenuItem>
           )}
           <MenuItem href='/users' icon={<i className='bx-user' />} exactMatch={false} activeUrl='/users'>

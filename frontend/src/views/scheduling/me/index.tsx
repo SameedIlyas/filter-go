@@ -14,6 +14,9 @@ import Alert from '@mui/material/Alert'
 import { errorMessage } from '@/libs/api/bff'
 import { useMyOffers, useMyShifts } from '@/libs/api/queries/scheduling'
 
+// Component Imports
+import ClockCard from '@views/timesheets/me/ClockCard'
+
 import MyShiftsCalendar from './MyShiftsCalendar'
 import MyOffers from './MyOffers'
 import NextUp from './NextUp'
@@ -90,6 +93,7 @@ const MyShiftsView = () => {
       )}
       <div className='grid grid-cols-1 gap-6 md:grid-cols-12'>
         <div className='flex flex-col gap-6 md:col-span-4 md:order-2'>
+          <ClockCard />
           <MyOffers />
           <NextUp shifts={upcoming} loading={nextUp.isPending} />
         </div>

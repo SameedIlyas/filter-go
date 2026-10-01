@@ -21,9 +21,11 @@ const ALLOWED = [
   new RegExp(`^sites(/${UUID})?$`),
   new RegExp(`^contracts(/${UUID}(/(lines|coverage|submit|sign|suspend|resume|cancel|new-version))?)?$`),
   new RegExp(`^schedules(/generate|/${UUID}(/(publish|unpublish|lock|close|regenerate|shifts))?)?$`),
-  new RegExp(`^shifts(/board|/extra|/${UUID}(/(validate-assignment|assign|unassign|cancel|confirm|offers))?)?$`),
+  new RegExp(`^shifts(/board|/extra|/${UUID}(/(validate-assignment|assign|unassign|cancel|confirm|offers|clock-in|work-logs))?)?$`),
   new RegExp(`^shift-offers/${UUID}/(accept|decline)$`),
-  /^me\/(shifts|offers)$/
+  new RegExp(`^timesheets(/exceptions|/hours|/approve-batch|/${UUID}(/(clock-out|correct|resubmit|approve|reject|adjust))?)?$`),
+  new RegExp(`^timesheet-exceptions/${UUID}/resolve$`),
+  /^me\/(shifts|offers|timesheets)$/
 ]
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
