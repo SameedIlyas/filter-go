@@ -57,6 +57,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
   // Vars
   const isStaff = session?.role === 'ADMIN' || session?.role === 'SUPERVISOR'
   const isFieldUser = session?.role === 'FIELD_USER'
+  const seesInvoices = session?.role === 'ADMIN' || session?.role === 'CLIENT_USER'
 
   // Pending offers for the "My shifts" badge; only field users have any
   const { data: offers } = useMyOffers(isFieldUser)
@@ -107,6 +108,11 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
           {isStaff && (
             <MenuItem href='/timesheets' icon={<i className='bx-time-five' />} exactMatch={false} activeUrl='/timesheets'>
               Timesheets
+            </MenuItem>
+          )}
+          {seesInvoices && (
+            <MenuItem href='/invoices' icon={<i className='bx-receipt' />} exactMatch={false} activeUrl='/invoices'>
+              Invoices
             </MenuItem>
           )}
           <MenuItem href='/settings/catalog' icon={<i className='bx-purchase-tag' />} exactMatch={false} activeUrl='/settings/catalog'>

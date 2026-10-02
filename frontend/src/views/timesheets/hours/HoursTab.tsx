@@ -15,22 +15,14 @@ import { errorMessage } from '@/libs/api/bff'
 import { useSchedulingSites } from '@/libs/api/queries/scheduling'
 import { useHoursQuery } from '@/libs/api/queries/timesheets'
 
+// Util Imports
+import { downloadCsv } from '@/utils/csv'
+
 import { hoursCsv } from '../logic/hoursCsv'
 import type { HoursMetric } from '../logic/hoursCsv'
 import HoursGrid from './HoursGrid'
 import HoursToolbar from './HoursToolbar'
 import { useHoursParams } from './useHoursParams'
-
-/** Hands the browser a CSV file to save. */
-const download = (name: string, csv: string) => {
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-  const link = document.createElement('a')
-
-  link.href = url
-  link.download = name
-  link.click()
-  URL.revokeObjectURL(url)
-}
 
 /** Hours per worker and day for a period (at most 45 days), with weekly overtime and a CSV export for payroll. */
 const HoursTab = () => {
@@ -41,7 +33,7 @@ const HoursTab = () => {
   const sites = useSchedulingSites()
 
   const onExport = () => {
-    if (hours.data) download(`hours_${window.from}_${window.to}.csv`, hoursCsv(hours.data, metric))
+    if (hours.data) downloadCsv(`hours_${window.from}_${window.to}.csv`, hoursCsv(hours.data, metric))
   }
 
   return (

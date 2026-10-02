@@ -1,15 +1,11 @@
 import type { HoursResponse, HoursTally } from '@/types/timesheetTypes'
 
+import { safeText, toCsv } from '@/utils/csv'
+
 export type HoursMetric = 'workedMinutes' | 'approvedMinutes' | 'scheduledMinutes'
 
 /** Decimal hours with two places, the form payroll sheets expect ("7.75"). */
 export const decimalHours = (minutes: number): string => (minutes / 60).toFixed(2)
-
-/** RFC 4180: quote a cell when it holds a comma, quote or line break; double inner quotes. */
-const cell = (value: string): string => (/[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value)
-
-/** A leading =, +, - or @ makes spreadsheets run the cell as a formula; prefix such names with an apostrophe. */
-const safeText = (value: string): string => (/^[=+\-@]/.test(value) ? `'${value}` : value)
 
 const minutesOf = (tally: HoursTally | undefined, metric: HoursMetric): number => tally?.[metric] ?? 0
 
@@ -38,5 +34,5 @@ export const hoursCsv = (data: HoursResponse, metric: HoursMetric): string => {
     decimalHours(data.totals.overtimeMinutes)
   ]
 
-  return [header, ...rows, total].map(row => row.map(cell).join(',')).join('\r\n')
+  return toCsv([header, ...rows, total])
 }

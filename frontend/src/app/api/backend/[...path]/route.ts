@@ -25,6 +25,7 @@ const ALLOWED = [
   new RegExp(`^shift-offers/${UUID}/(accept|decline)$`),
   new RegExp(`^timesheets(/exceptions|/hours|/approve-batch|/${UUID}(/(clock-out|correct|resubmit|approve|reject|adjust))?)?$`),
   new RegExp(`^timesheet-exceptions/${UUID}/resolve$`),
+  new RegExp(`^invoices(/runs|/${UUID}(/(lines(/${UUID})?|approve|void|send|payments|retry-sync|trace))?)?$`),
   /^me\/(shifts|offers|timesheets)$/
 ]
 

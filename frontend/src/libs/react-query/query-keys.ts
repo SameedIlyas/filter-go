@@ -92,5 +92,15 @@ export const queryKeys = {
     me: () => [...queryKeys.root, 'timesheets', 'me'] as const,
     mine: (filters: object) => [...queryKeys.root, 'timesheets', 'me', 'list', filters] as const,
     myOpen: () => [...queryKeys.root, 'timesheets', 'me', 'open'] as const
+  },
+
+  /** `/api/backend/{invoices,org}` — see `src/libs/api/queries/invoices.ts`. */
+  invoices: {
+    all: () => [...queryKeys.root, 'invoices'] as const,
+    lists: () => [...queryKeys.root, 'invoices', 'list'] as const,
+    list: (filters: object) => [...queryKeys.root, 'invoices', 'list', filters] as const,
+    detail: (id: string) => [...queryKeys.root, 'invoices', 'one', id] as const,
+    trace: (id: string) => [...queryKeys.root, 'invoices', 'trace', id] as const,
+    org: () => [...queryKeys.root, 'invoices', 'org'] as const
   }
 } as const
